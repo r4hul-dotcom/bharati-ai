@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Bharati AI{% endblock %}
+
+{% block content %}
+
+<!-- Custom Styles for this Page Only -->
+<style>
+    :root {
+        --primary: #0d6efd;
+        --primary-dark: #0b5ed7;
+        --secondary: #6c757d;
+        --info: #0dcaf0;
+    }
+    .hero-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+        padding: 3rem 0;
+        /* The margin-top: -1.5rem pulls it up to be flush with the navbar */
+        margin-top: -1.5rem; 
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .main-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .main-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    }
+    .form-control, .form-control:focus {
+        border-radius: 8px;
+        border: 1px solid #e0e3e7;
+        padding: 12px 16px;
+        box-shadow: none;
+    }
+    .form-control:focus {
+        border-color: var(--primary);
+    }
+    .btn-primary {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+    .btn-outline-secondary {
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .feature-icon {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+    .floating-label {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .floating-label label {
+        position: absolute;
+        top: -10px;
+        left: 12px;
+        background-color: white;
+        padding: 0 5px;
+        font-size: 0.85rem;
+        color: var(--secondary);
+        z-index: 1;
+    }
+    .text-gradient {
+        background: linear-gradient(90deg, var(--primary), var(--info));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .pulse-animation { animation: pulse 2s infinite; }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.03); }
+        100% { transform: scale(1); }
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <h1 class="display-4 fw-bold mb-3">
+                    <span class="text-gradient">Bharati AI Email Classifier</span>
+                    <i class="bi bi-robot ms-2"></i>
+                </h1>
+                <p class="lead mb-4" style="max-width: 700px; margin: 0 auto;">
+                    Revolutionizing customer communication with AI-powered email analysis, automatic classification, and intelligent response generation.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content in Container -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Main Form Card -->
+        <div class="main-card card p-4 bg-white mb-5">
+            <form method="POST" action="{{ url_for('main.home') }}">
+                <div class="floating-label">
+                    <label for="email">Email Content</label>
+                    <textarea 
+                        name="email" 
+                        id="email" 
+                        rows="8" 
+                        class="form-control" 
+                        placeholder="Paste customer email content here..." 
+                    ></textarea>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="priorityCheck" checked
+                               data-bs-toggle="tooltip" data-bs-placement="right" 
+                               title="Priority Analysis uses advanced NLP models to detect urgency and sentiment.">
+                        <label class="form-check-label small" for="priorityCheck">
+                            Priority Analysis <span class="badge bg-success ms-1">PRO</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary pulse-animation">
+                        <i class="bi bi-lightning-charge-fill me-2"></i>Analyze Email
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Features Grid -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 text-center">
+                    <div class="feature-icon"><i class="bi bi-tags-fill"></i></div>
+                    <h5>Smart Product Tagging</h5>
+                    <p class="text-muted small">Automatically detects products mentioned in emails.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 text-center">
+                    <div class="feature-icon"><i class="bi bi-robot"></i></div>
+                    <h5>AI Classification</h5>
+                    <p class="text-muted small">Categorizes emails with high accuracy.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 text-center">
+                    <div class="feature-icon"><i class="bi bi-graph-up"></i></div>
+                    <h5>Real-time Analytics</h5>
+                    <p class="text-muted small">Track metrics and trends via the dashboard.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CTA Section -->
+        <div class="text-center mb-5">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-lg btn-outline-secondary">
+                <i class="bi bi-speedometer2 me-2"></i>View Analytics Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Page-Specific JavaScript -->
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Form submission animation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const btn = document.querySelector('.btn-primary');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Analyzing...';
+        btn.classList.remove('pulse-animation');
+    });
+</script>
+
+{% endblock %}

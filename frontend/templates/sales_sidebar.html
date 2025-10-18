@@ -1,0 +1,19 @@
+<!-- START OF FILE: templates/sales_sidebar.html -->
+
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="sidebar-logo">
+        <span class="sidebar-title">Bharati AI Sales</span>
+    </div>
+    <ul class="nav-links nav nav-pills flex-column">
+        <li><a href="{{ url_for('main.sales_dashboard_personal') }}" class="nav-link {% if request.endpoint == 'sales_dashboard_personal' %}active{% endif %}"><span data-feather="home"></span> Dashboard</a></li>
+        <li><a href="{{ url_for('main.my_leads') }}" class="nav-link {% if request.endpoint == 'my_leads' %}active{% endif %}"><span data-feather="users"></span> My Leads</a></li>
+        <li><a href="{{ url_for('main.my_replies') }}" class="nav-link {% if request.endpoint == 'my_replies' %}active{% endif %}"><span data-feather="inbox"></span> My Replies</a></li>
+        <li><a href="{{ url_for('main.my_reports') }}" class="nav-link {% if request.endpoint == 'my_reports' %}active{% endif %}"><span data-feather="bar-chart-2"></span> My Reports</a></li>
+    </ul>
+    <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+    </div>
+</nav>

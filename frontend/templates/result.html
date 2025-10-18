@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Classification Result | Bharati AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-blue: #0d6efd;
+            --success-green: #198754;
+            --danger-red: #dc3545;
+            --warning-orange: #fd7e14;
+            --info-cyan: #0dcaf0;
+        }
+        
+        .formatted-reply {
+            white-space: pre-line;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-blue);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .formatted-reply a {
+            color: var(--primary-blue);
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        
+        .formatted-reply strong {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .confidence-meter {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .confidence-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .tag-pill {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .product-tag {
+            background-color: #ebf5ff;
+            color: var(--primary-blue);
+            border: 1px solid #d6e6ff;
+        }
+        
+        .action-card {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left-color: var(--primary-blue);
+        }
+        
+        .sentiment-positive {
+            color: var(--success-green);
+            background-color: rgba(25, 135, 84, 0.1);
+        }
+        
+        .sentiment-neutral {
+            color: #6b7280;
+            background-color: rgba(107, 114, 128, 0.1);
+        }
+        
+        .sentiment-negative {
+            color: var(--danger-red);
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+        
+        .header-icon {
+            font-size: 1.2em;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 overflow-hidden">
+        <!-- Header Section -->
+        <div class="card-header bg-white border-bottom-0 pb-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0"><i class="bi bi-envelope-check header-icon"></i> Email Analysis Result</h3>
+                    <p class="text-muted mb-0">Review the automatically generated classification and response</p>
+                </div>
+                <div class="badge bg-light text-dark">
+                    <i class="bi bi-clock"></i> {{ timestamp }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body pt-0">
+            <!-- Classification Summary -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 bg-white rounded border">
+                        <h5><i class="bi bi-folder"></i> Classification</h5>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="me-2">Category:</span>
+                            <span class="badge bg-primary rounded-pill">{{ category|replace('_',' ')|title }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">Intent:</span>
+                            <span class="badge bg-success rounded-pill">{{ intent }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="p-3 bg-white rounded border">
+                        <h5><i class="bi bi-graph-up"></i> Sentiment Analysis</h5>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="me-2">Tone:</span>
+                            <span class="badge rounded-pill sentiment-{{ sentiment }}">{{ sentiment|title }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">Urgency:</span>
+                            <div class="progress w-100" style="height: 6px;">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ urgency * 100 }}%" aria-valuenow="{{ urgency * 100 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <small class="ms-2">{{ urgency_label }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Detected Products -->
+            {% if products %}
+            <div class="mb-4">
+                <h5><i class="bi bi-tags"></i> Detected Products</h5>
+                <div class="p-3 bg-white rounded border">
+                    {% for product in products %}
+                    <span class="tag-pill product-tag">
+                        <i class="bi bi-tag-fill"></i> {{ product }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Suggested Actions -->
+            <div class="mb-4">
+                <h5><i class="bi bi-lightning"></i> Suggested Actions</h5>
+                <div class="row">
+                    {% for action in suggested_actions %}
+                    <div class="col-md-4 mb-3">
+                        <div class="action-card p-3 bg-white rounded border h-100">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3 text-primary">
+                                    <i class="bi bi-{{ action.icon }}" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">{{ action.title }}</h6>
+                                    <p class="small text-muted mb-0">{{ action.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Email Response Preview -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="bi bi-reply"></i> Draft Response</h5>
+                    <div class="badge bg-light text-dark">
+                        <i class="bi bi-info-circle"></i> Preview Only - Not Sent
+                    </div>
+                </div>
+                <div class="formatted-reply mt-2">{{ reply|safe }}</div>
+            </div>
+            
+            <!-- Attachments -->
+            {% if attachments %}
+            <div class="mb-4">
+                <h5><i class="bi bi-paperclip"></i>Attachments</h5>
+                <div class="p-3 bg-white rounded border">
+                    <div class="list-group list-group-flush">
+                        {% for file in attachments %}
+                        <div class="list-group-item border-0 py-2">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3 text-muted">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <a href="{{ url_for('main.serve_pdf', filename=file) }}" target="_blank">{{ file }}</a>
+                                    <small class="d-block text-muted">PDF File</small>
+                                </div>
+                                <div>
+                                    <a href="{{ url_for('main.serve_pdf', filename=file) }}" download class="btn btn-sm btn-outline-primary">Download</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Confidence Metrics -->
+            <div class="mb-4">
+                <h5><i class="bi bi-bar-chart"></i> Confidence Metrics</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="p-3 bg-white rounded border h-100">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="confidence-label">
+                                    <i class="bi bi-cpu"></i> AI Confidence
+                                </span>
+                                <span class="fw-semibold">
+                                    {% if ml_confidence %}
+                                        {{ (ml_confidence * 100)|round(1) }}%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </span>
+
+                            </div>
+                            <div class="progress confidence-meter">
+                                <div class="progress-bar bg-info" 
+                                     role="progressbar" 
+                                     style="width: {{ ml_confidence * 100 }}%" 
+                                     aria-valuenow="{{ ml_confidence * 100 }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <small class="text-muted">Model certainty in classification</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="p-3 bg-white rounded border h-100">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="confidence-label">
+                                    <i class="bi bi-diagram-3"></i> Rules Confidence
+                                </span>
+                                <span class="fw-semibold">
+                                    {% if rule_confidence %}
+                                        {{ (rule_confidence * 100) | round(1) }}%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="progress confidence-meter">
+                                <div class="progress-bar bg-warning" 
+                                     role="progressbar" 
+                                     style="width: {{ rule_confidence * 100 }}%" 
+                                     aria-valuenow="{{ rule_confidence * 100 }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <small class="text-muted">Business rule match confidence</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Navigation -->
+            <div class="d-flex justify-content-between pt-3 border-top">
+                <a href="/" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Classify Another Email
+                </a>
+                <div>
+                    <a href="/history" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-clock-history"></i> View History
+                    </a>
+                    <a href="/dashboard" class="btn btn-outline-dark">
+                        <i class="bi bi-speedometer2"></i> Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script>
+    // Add animation to confidence meters on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const meters = document.querySelectorAll('.progress-bar');
+        meters.forEach(meter => {
+            meter.style.transition = 'width 1s ease-in-out';
+            meter.style.width = '0';
+            setTimeout(() => {
+                meter.style.width = meter.getAttribute('aria-valuenow') + '%';
+            }, 100);
+        });
+    });
+</script>
+</body>
+</html>

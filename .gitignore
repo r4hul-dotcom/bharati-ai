@@ -1,0 +1,79 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# User-specific tokens and credentials (CRITICAL)
+token.json
+token.pickle
+credentials.json
+credentials.json.backup
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Celery state files
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
+
+# Sockets
+*.sock
+
+# Generated output files
+export/
+pdfs/
+data/
+
+# Environment variables
+.env
+.env.local
+*.env
+!.env.example
+
+# IDE / Editor specific files
+.vscode/
+.idea/
+*.swp
+
+# DevContainer
+.devcontainer/
+
+# Backup files
+*.backup
+*.save
+*.save.*
+backups/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Binary/Archive files
+*.deb
+*.zip
+*.tar.gz
+
+# Project specific
+project_structure.txt
+migrate_replies_to_mongo.py
+test_redirect_uri.py
+wsgi.py
+wsgi_entry.py
+libssl1.1_1.1.1f-1ubuntu2.21_amd64.deb
+bharati-ai-extension.zip
+token.json

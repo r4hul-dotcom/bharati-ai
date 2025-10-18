@@ -1,0 +1,125 @@
+<!-- START OF FILE: templates/create_campaign.html (UPGRADED LAYOUT) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Campaign - Bharati AI</title>
+    
+    <!-- Google Fonts, Bootstrap CSS & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <!-- This is the full CSS from your dashboard for a consistent look -->
+    <style>
+        :root {
+            --sidebar-bg: #ffffff; --main-bg-color: #f4f7fc; --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(0, 0, 0, 0.08); --text-primary: #1A202C; --text-secondary: #718096;
+            --sidebar-width: 240px;
+        }
+        body {
+            font-family: 'Poppins', sans-serif; background-color: var(--main-bg-color); color: var(--text-primary);
+            margin: 0; padding: 1rem; overflow: hidden; position: relative;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1;
+            background: url("{{ url_for('static', filename='img/light-bg.jpg') }}") no-repeat center center;
+            filter: blur(12px); background-size: cover;
+        }
+        .dashboard-container { display: flex; }
+        .sidebar {
+            width: var(--sidebar-width); height: calc(100vh - 2rem); background-color: var(--sidebar-bg);
+            border: 1px solid var(--card-border); border-radius: 16px; display: flex; flex-direction: column;
+            padding: 1.5rem; position: fixed; top: 1rem; left: 1rem;
+        }
+        .sidebar-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+        .sidebar-logo { height: 40px; }
+        .sidebar-title { font-size: 1.25rem; font-weight: 600; }
+        .nav-links { list-style: none; padding: 0; margin: 0; }
+        .nav-links .nav-link {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; margin-bottom: 0.5rem;
+            border-radius: 8px; color: var(--text-secondary); font-weight: 500; text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .nav-links .nav-link:hover { color: var(--text-primary); background-color: rgba(0,0,0,0.04); }
+        .nav-links .nav-link.active { background-color: var(--text-primary); color: var(--sidebar-bg); font-weight: 600; }
+        .main-content {
+            flex-grow: 1; margin-left: calc(var(--sidebar-width) + 2rem);
+            height: calc(100vh - 2rem); overflow-y: auto; padding: 2rem;
+        }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header-greeting { font-size: 1.75rem; font-weight: 600; margin: 0; }
+        .header-date { color: var(--text-secondary); font-size: 0.9rem; }
+        .content-card {
+            background-color: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 2rem; backdrop-filter: blur(15px) saturate(120%);
+        }
+        .sidebar-heading { padding: 0 1rem; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Executive Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="sidebar-logo">
+                <span class="sidebar-title">Bharati AI</span>
+            </div>
+            <ul class="nav-links nav nav-pills flex-column" style="flex-grow: 1;">
+                <li><a href="{{ url_for('main.dashboard') }}" class="nav-link"><span data-feather="home"></span> Dashboard</a></li>
+                <li class="sidebar-heading">Sales Module</li>
+                <li><a href="{{ url_for('main.manage_leads') }}" class="nav-link"><span data-feather="users"></span> Manage Leads</a></li>
+                <!-- Mark "Manage Campaigns" as active since this is a sub-page -->
+                <li><a href="{{ url_for('main.manage_campaigns') }}" class="nav-link active"><span data-feather="send"></span> Manage Campaigns</a></li>
+                <li><a href="{{ url_for('main.view_replies') }}" class="nav-link"><span data-feather="inbox"></span> View All Replies</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div>
+                    <h1 class="header-greeting">Create New Campaign Template</h1>
+                    <p class="header-date">Design a new email template for your sales team to use.</p>
+                </div>
+            </header>
+
+            <div class="row">
+                <div class="col-lg-10">
+                    <div class="content-card">
+                        <form method="POST" action="{{ url_for('main.create_campaign') }}">
+                            <div class="mb-3">
+                                <label for="campaign_name" class="form-label fw-bold">Campaign Name</label>
+                                <input type="text" class="form-control" id="campaign_name" name="campaign_name" placeholder="e.g., Q3 Product Introduction" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="subject" class="form-label fw-bold">Email Subject</label>
+                                <input type="text" class="form-control" id="subject" name="subject" placeholder="e.g., A Question About Your Fire Safety Needs" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="body" class="form-label fw-bold">Email Body</label>
+                                <textarea class="form-control" id="body" name="body" rows="12" placeholder="Hi {{lead_name}},<br><br>We noticed your company..." required></textarea>
+                                <div class="form-text mt-2">
+                                    Use <code>{{ '{{lead_name}}' }}</code> and <code>{{ '{{current_user.name}}' }}</code> for personalization. You must use HTML tags like <code><br></code> for line breaks.
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-2"></i>Save Campaign Template</button>
+                            <a href="{{ url_for('main.manage_campaigns') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>

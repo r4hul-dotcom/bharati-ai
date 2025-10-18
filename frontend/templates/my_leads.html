@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Leads - Bharati AI</title>
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <style>
+        /* This CSS is copied from your other dashboard pages for consistency */
+        :root {
+            --sidebar-bg: #ffffff;
+            --main-bg-color: #f4f7fc;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --text-primary: #1A202C;
+            --text-secondary: #718096;
+            --sidebar-width: 240px;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--main-bg-color);
+            color: var(--text-primary);
+            margin: 0; padding: 1rem;
+            overflow: hidden; position: relative;
+        }
+        body::before {
+            content: ''; position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: url("{{ url_for('static', filename='img/light-bg.jpg') }}") no-repeat center center;
+            filter: blur(12px);
+            background-size: cover;
+        }
+        .dashboard-container { display: flex; }
+        .sidebar {
+            width: var(--sidebar-width); height: calc(100vh - 2rem);
+            background-color: var(--sidebar-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px; display: flex; flex-direction: column;
+            padding: 1.5rem; position: fixed;
+            top: 1rem; left: 1rem;
+        }
+        .sidebar-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+        .sidebar-logo { height: 40px; }
+        .sidebar-title { font-size: 1.25rem; font-weight: 600; }
+        .nav-links { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .nav-links .nav-link {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.8rem 1rem; margin-bottom: 0.5rem;
+            border-radius: 8px; color: var(--text-secondary);
+            font-weight: 500; text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .nav-links .nav-link:hover { color: var(--text-primary); background-color: rgba(0,0,0,0.04); }
+        .nav-links .nav-link.active {
+            background-color: var(--text-primary);
+            color: var(--sidebar-bg);
+            font-weight: 600;
+        }
+        .sidebar-footer { margin-top: auto; }
+        .main-content {
+            flex-grow: 1; margin-left: calc(var(--sidebar-width) + 2rem);
+            height: calc(100vh - 2rem);
+            overflow-y: auto; padding: 2rem;
+        }
+        .main-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem; padding: 0 0.5rem;
+        }
+        .header-greeting { font-size: 1.75rem; font-weight: 600; margin: 0; }
+        .content-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 1.5rem;
+            backdrop-filter: blur(15px) saturate(120%);
+            -webkit-backdrop-filter: blur(15px) saturate(120%);
+        }
+        .action-buttons .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* === START: NEW STYLES FOR THE FLOATING TABLE (COPIED FROM EXECUTIVE DASHBOARD) === */
+        .table-floating {
+            background-color: transparent;
+            --bs-table-bg: transparent; /* Override Bootstrap's variable */
+            --bs-table-hover-bg: rgba(0,0,0,0.04); /* Subtle hover for rows */
+        }
+        .table-floating thead th {
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding-bottom: 1rem;
+        }
+        .table-floating tbody,
+        .table-floating tbody tr,
+        .table-floating tbody td {
+            background-color: transparent !important;
+        }
+        .table-floating tbody tr {
+            border-bottom: 1px solid var(--card-border);
+        }
+        .table-floating tbody tr:last-child {
+            border-bottom: none;
+        }
+        /* === END: NEW STYLES === */
+
+/* In my_leads.html, add this to your <style> block */
+        .btn-header-action {
+            background-color: #0D6EFD; /* Blue */
+            border: 1px solid transparent;
+            color: #ffffff; /* White text */
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            text-decoration: none;
+        }
+
+        .btn-header-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(13, 110, 253, 0.3);
+            background-color: #0b5ed7; /* Darker blue on hover */
+            color: #ffffff;
+        }
+
+.dark-mode .btn-header-action {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+}
+.dark-mode .btn-header-action:hover {
+    background-color: rgba(28, 31, 40, 0.85);
+}
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        {% include 'sales_sidebar.html' %}
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div>
+                    <h1 class="header-greeting">My Assigned Leads</h1>
+                </div>
+                <a href="{{ url_for('main.start_campaign') }}" class="btn btn-primary">
+                    <i class="bi bi-broadcast me-2"></i>Start Campaign
+                </a>
+            </header>
+
+            <div class="flash-alerts-container" style="position: absolute; top: 1rem; right: 2.5rem; z-index: 1050;">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="content-card">
+                        <table class="table table-hover align-middle table-floating">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email / Company</th>
+                                    <th class="text-center">Status</th>
+                                    <!-- THIS IS THE HEADER FOR THE TIMESTAMP COLUMN -->
+                                    <th>Last Contacted</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in leads %}
+                                <tr>
+                                    <td>{{ lead.get('name', 'N/A') }}</td>
+                                    <td>
+                                        <div>{{ lead.get('email', 'N/A') }}</div>
+                                        <small class="text-muted">{{ lead.get('company', 'N/A') }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge 
+                                            {% if lead.get('status') == 'interested' %}bg-success
+                                            {% elif lead.get('status') == 'negative' %}bg-danger
+                                            {% elif lead.get('status') == 'contacted' %}bg-primary
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ lead.get('status', 'new')|title }}
+                                        </span>
+                                    </td>
+                                    <!-- THIS IS THE DATA CELL FOR THE TIMESTAMP -->
+                                    <td>
+                                        {% if lead.get('last_contacted_at') %}
+                                            {{ moment(lead.get('last_contacted_at')).fromNow() }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2 action-buttons">
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <form action="{{ url_for('main.edit_lead_status') }}" method="POST" class="px-2">
+                                                            <input type="hidden" name="lead_id" value="{{ lead._id }}">
+                                                            <select name="new_status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                                <option disabled selected>Change status...</option>
+                                                                <option value="new">New</option>
+                                                                <option value="contacted">Contacted</option>
+                                                                <option value="interested">Interested</option>
+                                                                <option value="negative">Negative</option>
+                                                            </select>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <form action="{{ url_for('main.delete_lead', lead_id=lead._id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lead? This action cannot be undone.');">
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <!-- The colspan must now be 5 -->
+                                <tr><td colspan="5" class="text-center p-4 text-muted">You have no leads assigned to you yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>

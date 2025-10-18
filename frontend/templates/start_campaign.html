@@ -1,0 +1,178 @@
+<!-- START OF FILE: templates/start_campaign.html (NEW) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Campaign - Bharati AI</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <style>
+        :root {
+            --sidebar-bg: #ffffff;
+            --main-bg-color: #f4f7fc;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --text-primary: #1A202C;
+            --text-secondary: #718096;
+            --sidebar-width: 240px;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--main-bg-color);
+            color: var(--text-primary);
+            margin: 0; padding: 1rem;
+            overflow: hidden; position: relative;
+        }
+        body::before {
+            content: ''; position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: url("{{ url_for('static', filename='img/light-bg.jpg') }}") no-repeat center center;
+            filter: blur(12px);
+            background-size: cover;
+        }
+        .dashboard-container { display: flex; }
+        .sidebar {
+            width: var(--sidebar-width); height: calc(100vh - 2rem);
+            background-color: var(--sidebar-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px; display: flex; flex-direction: column;
+            padding: 1.5rem; position: fixed;
+            top: 1rem; left: 1rem;
+        }
+        .sidebar-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+        .sidebar-logo { height: 40px; }
+        .sidebar-title { font-size: 1.25rem; font-weight: 600; }
+        .nav-links { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .nav-links .nav-link {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.8rem 1rem; margin-bottom: 0.5rem;
+            border-radius: 8px; color: var(--text-secondary);
+            font-weight: 500; text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .nav-links .nav-link:hover { color: var(--text-primary); background-color: rgba(0,0,0,0.04); }
+        .nav-links .nav-link.active {
+            background-color: var(--text-primary);
+            color: var(--sidebar-bg);
+            font-weight: 600;
+        }
+        .sidebar-footer { margin-top: auto; }
+        .main-content {
+            flex-grow: 1; margin-left: calc(var(--sidebar-width) + 2rem);
+            height: calc(100vh - 2rem);
+            overflow-y: auto; padding: 2rem;
+        }
+        .main-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem; padding: 0 0.5rem;
+        }
+        .header-greeting { font-size: 1.75rem; font-weight: 600; margin: 0; }
+        .content-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 1.5rem;
+            backdrop-filter: blur(15px) saturate(120%);
+            -webkit-backdrop-filter: blur(15px) saturate(120%);
+        }
+        .action-buttons .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .table-floating {
+            background-color: transparent;
+            --bs-table-bg: transparent;
+            --bs-table-hover-bg: rgba(0,0,0,0.04);
+        }
+        .table-floating thead th {
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding-bottom: 1rem;
+        }
+        .table-floating tbody,
+        .table-floating tbody tr,
+        .table-floating tbody td {
+            background-color: transparent !important;
+        }
+        .table-floating tbody tr {
+            border-bottom: 1px solid var(--card-border);
+        }
+        .table-floating tbody tr:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+    <div class="sidebar-header">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="sidebar-logo">
+        <span class="sidebar-title">Bharati AI Sales</span>
+    </div>
+    <ul class="nav-links nav nav-pills">
+        <li><a href="{{ url_for('main.sales_dashboard_personal') }}" class="nav-link {% if request.endpoint == 'sales_dashboard_personal' %}active{% endif %}"><span data-feather="home"></span> My Dashboard</a></li>
+        <li><a href="{{ url_for('main.my_leads') }}" class="nav-link {% if request.endpoint == 'my_leads' %}active{% endif %}"><span data-feather="users"></span> My Leads</a></li>
+        <li><a href="{{ url_for('main.my_reports') }}" class="nav-link {% if request.endpoint == 'my_reports' %}active{% endif %}"><span data-feather="bar-chart-2"></span> My Reports</a></li>
+    </ul>
+    <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </div>
+</nav>
+        
+        <main class="main-content">
+            <header class="main-header">
+                <h1 class="header-greeting">Start a New Outreach Campaign</h1>
+            </header>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="content-card">
+                        <form method="POST" action="{{ url_for('main.start_campaign') }}">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                You have <strong>{{ lead_count }}</strong> new leads available to contact.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="campaign_id" class="form-label fw-bold">1. Select an Email Template</label>
+                                <select class="form-select form-select-lg" id="campaign_id" name="campaign_id" required>
+                                    <option selected disabled value="">Choose a campaign...</option>
+                                    {% for campaign in campaigns %}
+                                    <option value="{{ campaign._id }}">{{ campaign.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="number_to_send" class="form-label fw-bold">2. How many leads should we email?</label>
+                                <input type="number" class="form-control form-control-lg" id="number_to_send" name="number_to_send" min="1" max="{{ lead_count }}" placeholder="e.g., 30" required>
+                                <div class="form-text mt-1">This will send emails to your oldest 'new' leads first.</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg" {% if lead_count == 0 %}disabled{% endif %}>
+                                <i class="bi bi-send-fill me-2"></i>Launch Campaign
+                            </button>
+                            <a href="{{ url_for('main.my_leads') }}" class="btn btn-secondary btn-lg">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>

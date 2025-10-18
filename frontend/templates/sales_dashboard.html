@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard - Bharati AI</title>
+    
+    <!-- Shared CSS and JS from the main AI dashboard -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <!-- This is the full CSS required for the modern look -->
+<style>
+    :root {
+        --sidebar-bg: #ffffff; --main-bg-color: #f4f7fc; --card-bg: rgba(255, 255, 255, 0.7);
+        --card-border: rgba(0, 0, 0, 0.08); --text-primary: #1A202C; --text-secondary: #718096;
+        --sidebar-width: 240px; --accent-color: #0D6EFD;
+    }
+    
+    body {
+        font-family: 'Poppins', sans-serif; background-color: var(--main-bg-color); color: var(--text-primary);
+        margin: 0; padding: 1rem; overflow: hidden; position: relative;
+    }
+    
+    body::before {
+        content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1;
+        background: url("{{ url_for('static', filename='img/light-bg.jpg') }}") no-repeat center center;
+        filter: blur(12px); background-size: cover;
+    }
+    
+    .dashboard-container { display: flex; }
+    
+    .sidebar {
+        width: var(--sidebar-width); height: calc(100vh - 2rem); background-color: var(--sidebar-bg);
+        border: 1px solid var(--card-border); border-radius: 16px; display: flex; flex-direction: column;
+        padding: 1.5rem; position: fixed; top: 1rem; left: 1rem;
+    }
+    
+    .sidebar-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+    .sidebar-logo { height: 40px; }
+    .sidebar-title { font-size: 1.25rem; font-weight: 600; }
+    .nav-links { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+    .nav-links .nav-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; margin-bottom: 0.5rem; border-radius: 8px; color: var(--text-secondary); font-weight: 500; text-decoration: none; }
+    .nav-links .nav-link.active { background-color: var(--text-primary); color: var(--sidebar-bg); }
+    .sidebar-footer { margin-top: auto; }
+    .sidebar-heading { padding: 0 1rem; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    
+    .main-content {
+        flex-grow: 1; margin-left: calc(var(--sidebar-width) + 2rem);
+        height: calc(100vh - 2rem); overflow-y: auto; padding: 2rem;
+    }
+
+    /* Sales Module Container - Make transparent */
+    .content-card.sales-module-container {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    /* Hide the HR element */
+    .sales-module-container hr {
+        display: none;
+    }
+
+    /* Style the navigation tabs to float on background */
+    .sales-module-container .nav-tabs {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Style individual tab buttons */
+    .sales-module-container .nav-tabs .nav-link {
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
+        color: var(--text-secondary) !important;
+        font-weight: 500;
+        margin-bottom: -1px;
+    }
+    
+    .sales-module-container .nav-tabs .nav-link:hover {
+        color: var(--text-primary) !important;
+    }
+    
+    .sales-module-container .nav-tabs .nav-link.active {
+        color: var(--text-primary) !important;
+        background-color: transparent !important;
+        border-bottom-color: var(--text-primary) !important;
+        font-weight: 600;
+    }
+
+    /* Glass card style for all tab panes for a consistent look */
+    .sales-module-container .tab-content > .tab-pane {
+        background-color: var(--card-bg) !important;
+        border: 1px solid var(--card-border) !important;
+        border-radius: 16px !important;
+        padding: 1.5rem !important;
+        backdrop-filter: blur(15px) saturate(120%) !important;
+        -webkit-backdrop-filter: blur(15px) saturate(120%) !important;
+    }
+
+    /* Regular content cards */
+    .content-card {
+        background-color: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: 16px; padding: 1.5rem; backdrop-filter: blur(15px) saturate(120%);
+    }
+
+    /* Table styling */
+    .table-floating thead th { border: none; }
+    .table-floating tbody tr { border-bottom: 1px solid var(--card-border); }
+    .table-floating tbody tr:last-child { border-bottom: none; }
+
+    /* Glass KPI cards */
+    .glass-kpi {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(0,0,0,0.08);
+        backdrop-filter: blur(12px) saturate(120%);
+    }
+    
+    .glass-kpi.success {
+        background: rgba(0, 128, 0, 0.8);
+        color: white;
+    }
+    
+    .glass-list .list-group-item {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    /* Leads Pane Specific Styling - Updated for glass card background */
+    #leads-pane h3 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    #leads-pane p {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Action toolbar styling for glass card background */
+    #leads-pane .bg-light {
+        background-color: transparent !important;
+        border: none !important;
+        backdrop-filter: none;
+        border-bottom: 1px solid rgba(0,0,0,0.1) !important;
+        padding: 0 0 1rem 0 !important;
+        border-radius: 0 !important;
+    }
+
+    #leads-pane .bg-light strong {
+        color: var(--text-primary);
+    }
+
+    /* Table styling for glass card background */
+    #leads-pane .table-floating {
+        background-color: transparent;
+        backdrop-filter: none;
+    }
+
+    #leads-pane .table-floating thead th {
+        color: var(--text-primary);
+        font-weight: 600;
+        background-color: transparent;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    #leads-pane .table-floating tbody td {
+        color: var(--text-primary) !important;
+        background-color: transparent;
+    }
+
+    #leads-pane .table-floating .text-muted {
+        color: var(--text-secondary) !important;
+    }
+
+    #leads-pane .table-floating tbody tr {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Campaigns Pane Specific Styling - Updated for glass card background */
+    #campaigns-pane h3 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    #campaigns-pane p {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Table styling for campaigns tab glass card background */
+    #campaigns-pane .table-floating {
+        background-color: transparent;
+        backdrop-filter: none;
+    }
+
+    #campaigns-pane .table-floating thead th {
+        color: var(--text-primary);
+        font-weight: 600;
+        background-color: transparent;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    #campaigns-pane .table-floating tbody td {
+        color: var(--text-primary) !important;
+        background-color: transparent;
+    }
+
+    #campaigns-pane .table-floating .text-muted {
+        color: var(--text-secondary) !important;
+    }
+
+    #campaigns-pane .table-floating tbody tr {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    #campaigns-pane .table-floating tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    /* Replies Pane Specific Styling - Updated for glass card background */
+    #replies-pane h3 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    #replies-pane p {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Table styling for replies tab glass card background */
+    #replies-pane .table-floating {
+        background-color: transparent;
+        border: none;
+        overflow: visible;
+    }
+
+    #replies-pane .table-floating thead th {
+        color: var(--text-primary);
+        font-weight: 600;
+        background-color: transparent;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    #replies-pane .table-floating tbody td {
+        color: var(--text-primary) !important;
+        background-color: transparent;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    #replies-pane .table-floating .text-muted {
+        color: var(--text-secondary) !important;
+    }
+
+    #replies-pane .table-floating tbody tr {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    #replies-pane .table-floating tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+</style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- The shared sidebar provides consistent navigation -->
+        {% include 'executive_sidebar.html' %}
+
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-0" style="font-size: 1.75rem; font-weight: 600;">Sales Module</h2>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Overview, management, and replies for all sales campaigns.</p>
+                </div>
+            </div>
+
+            <!-- ======================= THE FIX IS HERE (HTML CHANGES) ======================= -->
+            <!-- This is now ONE SINGLE glass card containing both nav and content -->
+            <div class="content-card sales-module-container">
+                <!-- 1. Tab Navigation Links are now INSIDE the card -->
+                <ul class="nav nav-tabs" id="salesTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab"><i data-feather="pie-chart" class="me-2" style="width:16px;"></i>Overview</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="leads-tab" data-bs-toggle="tab" data-bs-target="#leads-pane" type="button" role="tab"><i data-feather="users" class="me-2" style="width:16px;"></i>Manage Leads</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="campaigns-tab" data-bs-toggle="tab" data-bs-target="#campaigns-pane" type="button" role="tab"><i data-feather="send" class="me-2" style="width:16px;"></i>Manage Campaigns</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="replies-tab" data-bs-toggle="tab" data-bs-target="#replies-pane" type="button" role="tab"><i data-feather="inbox" class="me-2" style="width:16px;"></i>View All Replies</button>
+                    </li>
+                </ul>
+                <hr>
+
+                <!-- Tab Content -->
+                <div class="tab-content pt-3" id="salesTabContent">
+<!-- ====== OVERVIEW TAB PANE ====== -->
+<div class="tab-pane fade show active" id="overview-pane" role="tabpanel">
+    <!-- START: Content for Overview Tab -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="glass-kpi">
+                <h6>Total Emails Sent</h6>
+                <h2>{{ total_sent }}</h2>
+                <small>{{ total_campaigns }} Campaigns</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-kpi">
+                <h6>Total Replies</h6>
+                <h2>{{ total_replies }}</h2>
+                <small>{{ total_leads }} Total Leads</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-kpi">
+                <h6>Response Rate</h6>
+                <h2>{{ response_rate }}%</h2>
+                <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ response_rate }}%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-kpi success">
+                <h6>Interested Leads</h6>
+                {% set interested_count = (reply_stats|selectattr('_id', 'equalto', 'interested')|map(attribute='count')|sum) %}
+                <h2>{{ interested_count }}</h2>
+                <small>From all campaigns</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-3">
+        <div class="col-lg-5">
+            <div class="glass-kpi h-100">
+                <h5>Reply Distribution</h5>
+                {% if reply_category_chart %}
+                    <img src="data:image/png;base64,{{ reply_category_chart }}" class="img-fluid" alt="Reply Categories Chart">
+                {% else %}
+                    <p class="text-center text-muted">No replies yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <h5>Top Performing Campaigns</h5>
+            <div class="list-group list-group-flush mb-4 glass-list">
+                {% for campaign in top_campaigns %}
+                    <a href="#" class="list-group-item list-group-item-action"><strong>{{ campaign.name }}</strong><small class="text-muted float-end">Replies: {{ campaign.get('reply_count', 0) }}</small></a>
+                {% else %}
+                    <div class="list-group-item text-muted">No campaigns sent.</div>
+                {% endfor %}
+            </div>
+            <h5>Recent "Interested" Replies</h5>
+            <div class="list-group list-group-flush glass-list">
+                {% for lead in hot_leads %}
+                    <a href="#" class="list-group-item list-group-item-action"><strong>{{ lead.from }}</strong><div class="text-muted text-truncate">{{ lead.subject }}</div></a>
+                {% else %}
+                    <div class="list-group-item text-muted">No interested replies.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== GOOGLE ACCOUNT TAB PANE (FIXED) ====== -->
+
+
+<!-- ====== MANAGE LEADS TAB PANE (FIXED) ====== -->
+<div class="tab-pane fade" id="leads-pane" role="tabpanel" aria-labelledby="leads-tab">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0">Manage Sales Leads</h3>
+            <p class="text-secondary mb-0">Assign new leads to your sales team.</p>
+        </div>
+        <a href="{{ url_for('main.upload_leads') }}" class="btn btn-primary">
+            <i data-feather="upload" class="me-2" style="width:16px;"></i> Upload New Leads
+        </a>
+    </div>
+    <form method="POST">
+        <div class="d-flex align-items-center bg-light p-2 rounded-3 mb-3 border">
+            <strong class="me-3">With selected leads:</strong>
+            <select name="sales_person_name" class="form-select form-select-sm me-2" style="width: 200px;"><option value="">Choose salesperson...</option>{% for person in sales_people %}<option value="{{ person.name }}">{{ person.name }}</option>{% endfor %}</select>
+            <button type="submit" class="btn btn-sm btn-primary" formaction="{{ url_for('main.mass_assign_leads') }}"><i class="bi bi-check-all me-1"></i> Assign</button>
+            <button type="submit" class="btn btn-sm btn-danger ms-2" formaction="{{ url_for('main.mass_delete_leads') }}" onclick="return confirm('Delete selected leads?');"><i class="bi bi-trash-fill me-1"></i> Delete</button>
+        </div>
+        <table class="table table-hover align-middle table-floating">
+            <thead><tr><th style="width: 1%;"><input class="form-check-input" type="checkbox" id="select-all-checkbox"></th><th>Name</th><th>Email / Company</th><th class="text-center">Status</th><th>Assigned To</th><th class="text-end">Action</th></tr></thead>
+            <tbody>{% for lead in leads %}<tr><td><input class="form-check-input lead-checkbox" type="checkbox" name="lead_ids" value="{{ lead._id }}"></td><td>{{ lead.get('name', 'N/A') }}</td><td><div>{{ lead.get('email', 'N/A') }}</div><small class="text-muted">{{ lead.get('company', 'N/A') }}</small></td><td class="text-center"><span class="badge {% if lead.get('status') == 'interested' %}bg-success{% elif lead.get('status') == 'negative' %}bg-danger{% elif lead.get('status') == 'contacted' %}bg-primary{% else %}bg-secondary{% endif %}">{{ lead.get('status', 'new')|title }}</span></td><td>{% if lead.get('assigned_to') %}{{ lead.get('assigned_to') }}{% else %}<span class="text-muted fst-italic">Unassigned</span>{% endif %}</td><td class="text-end"><div class="dropdown"><button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Actions</button><ul class="dropdown-menu dropdown-menu-end"><li><form action="{{ url_for('main.exec_edit_lead_status') }}" method="POST" class="px-2 py-1"><input type="hidden" name="lead_id" value="{{ lead._id }}"><select name="new_status" class="form-select form-select-sm" onchange="this.form.submit()"><option disabled selected>Change Status</option><option value="new">New</option><option value="contacted">Contacted</option><option value="interested">Interested</option><option value="negative">Negative</option></select></form></li><li><hr class="dropdown-divider"></li><li><form action="{{ url_for('main.exec_delete_lead', lead_id=lead._id) }}" method="POST" onsubmit="return confirm('Delete this lead?');"><button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete Lead</button></form></li></ul></div></td></tr>{% else %}<tr style="border:none;"><td colspan="6" class="text-center p-4">No leads found.</td></tr>{% endfor %}</tbody>
+        </table>
+    </form>
+</div>
+
+<!-- ====== MANAGE CAMPAIGNS TAB PANE (FIXED) ====== -->
+<div class="tab-pane fade" id="campaigns-pane" role="tabpanel" aria-labelledby="campaigns-tab">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0">Manage Email Campaigns</h3>
+            <p class="text-secondary mb-0">Create and review email templates for your sales team.</p>
+        </div>
+        <a href="{{ url_for('main.create_campaign') }}" class="btn btn-primary">
+            <i data-feather="plus-circle" class="me-2" style="width:16px;"></i> Create New Campaign
+        </a>
+    </div>
+    <table class="table table-hover align-middle table-floating">
+        <thead><tr><th>Campaign Name</th><th>Subject</th><th class="text-center">Status</th><th>Assigned To</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>{% for campaign in campaigns %}<tr><td><strong>{{ campaign.name }}</strong></td><td>{{ campaign.subject|truncate(50) }}</td><td class="text-center"><span class="badge {% if campaign.get('status') == 'active' %}bg-primary{% else %}bg-secondary{% endif %}">{{ campaign.get('status', 'Active')|title }}</span></td><td>{% if campaign.get('assigned_to') %}{{ campaign.get('assigned_to') }}{% else %}<span class="text-muted fst-italic">— Unassigned —</span>{% endif %}</td><td class="text-end"><div class="d-flex justify-content-end gap-2"><div class="dropdown"><button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-person-check-fill me-1"></i>{% if campaign.get('assigned_to') %}Change{% else %}Assign{% endif %}</button><ul class="dropdown-menu dropdown-menu-end"><li><h6 class="dropdown-header">Assign to...</h6></li>{% for person in sales_people %}<li><form action="{{ url_for('main.assign_campaign', campaign_id=campaign._id) }}" method="POST"><input type="hidden" name="sales_person_id" value="{{ person._id }}"><button type="submit" class="dropdown-item">{{ person.name }}</button></form></li>{% endfor %}{% if campaign.get('assigned_to') %}<li><hr class="dropdown-divider"></li><li><form action="{{ url_for('main.unassign_campaign', campaign_id=campaign._id) }}" method="POST" onsubmit="return confirm('Un-assign this campaign?');"><button type="submit" class="dropdown-item text-danger">Un-assign</button></form></li>{% endif %}</ul></div><a href="{{ url_for('main.edit_campaign', campaign_id=campaign._id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil-square"></i></a><form action="{{ url_for('main.delete_campaign', campaign_id=campaign._id) }}" method="POST" onsubmit="return confirm('Delete this campaign?');"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></div></td></tr>{% else %}<tr><td colspan="5" class="text-center p-4">No campaigns created yet.</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+
+<!-- ====== REPLIES TAB PANE (FIXED) ====== -->
+<div class="tab-pane fade" id="replies-pane" role="tabpanel" aria-labelledby="replies-tab">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0">All Campaign Replies</h3>
+            <p class="text-secondary mb-0">Review responses from your sales outreach campaigns.</p>
+        </div>
+    </div>
+    <table class="table table-hover align-middle table-floating">
+        <thead><tr><th>From</th><th>Subject</th><th>Snippet</th><th class="text-center">Category</th><th>Timestamp</th></tr></thead>
+        <tbody>{% for reply in replies %}<tr><td>{{ reply.get('from', 'N/A') }}</td><td>{{ reply.get('subject', 'N/A') }}</td><td>{{ reply.get('snippet', 'N/A')|truncate(100) }}</td><td class="text-center"><span class="badge {% if reply.get('category') == 'interested' %}bg-success{% elif reply.get('category') == 'negative' %}bg-danger{% else %}bg-secondary{% endif %}">{{ reply.get('category', 'N/A')|title }}</span></td><td>{{ moment(reply.timestamp).format('LLL') }}</td></tr>{% else %}<tr><td colspan="5" class="text-center p-4">No campaign replies have been received yet.</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        feather.replace(); // Render icons
+        
+        // Script for "Select All" checkbox in the Manage Leads tab
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const leadCheckboxes = document.querySelectorAll('.lead-checkbox');
+            if(selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('click', function (event) {
+                    leadCheckboxes.forEach(checkbox => checkbox.checked = event.target.checked);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

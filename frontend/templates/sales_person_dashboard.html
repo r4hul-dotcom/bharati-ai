@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard - Bharati AI</title>
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <style>
+        /* This CSS is copied from dashboard.html for a consistent look */
+        :root {
+            --sidebar-bg: #ffffff; --main-bg-color: #f4f7fc; --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(0, 0, 0, 0.08); --text-primary: #1A202C; --text-secondary: #718096;
+            --accent-color: #0D6EFD; --sidebar-width: 240px;
+        }
+        .dark-mode {
+            --sidebar-bg: #191C24; --main-bg-color: #0D0F14; --card-bg: rgba(28, 31, 40, 0.6);
+            --card-border: rgba(255, 255, 255, 0.1); --text-primary: #F7FAFC; --text-secondary: #A0AEC0;
+            background-image: url("{{ url_for('static', filename='img/dark-bg.jpg') }}"); background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--main-bg-color); color: var(--text-primary); margin: 0; padding: 1rem; overflow: hidden; position: relative; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; background: url("{{ url_for('static', filename='img/light-bg.jpg') }}") no-repeat center center; filter: blur(12px); background-size: cover; }
+        .dashboard-container { display: flex; }
+        .sidebar { width: var(--sidebar-width); height: calc(100vh - 2rem); background-color: var(--sidebar-bg); border: 1px solid var(--card-border); border-radius: 16px; display: flex; flex-direction: column; padding: 1.5rem; position: fixed; top: 1rem; left: 1rem; }
+        .sidebar-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+        .sidebar-logo { height: 40px; }
+        .sidebar-title { font-size: 1.25rem; font-weight: 600; }
+        .nav-links { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .nav-links .nav-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; margin-bottom: 0.5rem; border-radius: 8px; color: var(--text-secondary); font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
+        .nav-links .nav-link:hover { color: var(--text-primary); background-color: rgba(0,0,0,0.04); }
+        .nav-links .nav-link.active { background-color: var(--text-primary); color: var(--sidebar-bg); font-weight: 600; }
+        .sidebar-footer { margin-top: auto; }
+        .main-content { flex-grow: 1; margin-left: calc(var(--sidebar-width) + 2rem); height: calc(100vh - 2rem); overflow-y: auto; padding: 2rem; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0 0.5rem; }
+        .header-greeting { font-size: 1.75rem; font-weight: 600; margin: 0; }
+        .header-date { color: var(--text-secondary); font-size: 0.9rem; }
+        .header-controls { display: flex; align-items: center; gap: 0.75rem; }
+        .content-card, .kpi-card { background-color: var(--card-bg); border: 1px solid var(--card-border); backdrop-filter: blur(15px) saturate(120%); -webkit-backdrop-filter: blur(15px) saturate(120%); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .content-card { border-radius: 16px; padding: 1.5rem; }
+        .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--text-primary); }
+        .kpi-card { border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 1rem; }
+        .content-card:hover, .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+        .kpi-icon-wrapper { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+        .kpi-content .value { font-size: 1.5rem; font-weight: 600; line-height: 1.2; }
+        .kpi-content .label { font-size: 0.8rem; color: var(--text-secondary); }
+        .table-floating thead th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding-bottom: 1rem; border: none; }
+        .table-floating tbody td { padding-top: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--card-border); border-top: none; }
+        .table-floating tbody tr:last-child td { border-bottom: none; }
+        /* Header Controls Styling */
+        .search-box { display: flex; align-items: center; background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 0.5rem 0.75rem; }
+        .search-box .search-icon { width: 16px; height: 16px; color: var(--text-secondary); margin-right: 0.5rem; }
+        .search-box input { border: none; background: transparent; outline: none; color: var(--text-primary); width: 120px; }
+        .btn-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background-color: transparent; border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-secondary); transition: all 0.2s ease; position: relative; }
+        .btn-icon:hover { background-color: rgba(0,0,0,0.05); color: var(--text-primary); }
+        .btn-icon.dropdown-toggle::after { display: none; }
+        .btn-header-action { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: var(--accent-color); color: #ffffff; border: none; border-radius: 8px; font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
+        .btn-header-action:hover { background-color: #0b5ed7; color: #ffffff; }
+        .notification-badge { position: absolute; top: 5px; right: 5px; width: 18px; height: 18px; background-color: #dc3545; color: white; font-size: 10px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--main-bg-color); }
+        .dropdown-menu { background-color: var(--sidebar-bg); border-color: var(--card-border); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .dropdown-item { color: var(--text-secondary); }
+        .dropdown-item:hover { background-color: var(--accent-color); color: #ffffff; }
+        /* In the <style> block of sales_person_dashboard.html, add this */
+
+.flash-alerts-container {
+    position: absolute; top: 1rem; right: 2.5rem; z-index: 1050;
+    width: auto; max-width: 400px;
+}
+.alert {
+    border-radius: 8px; border: 1px solid transparent;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    font-weight: 500;
+}
+.alert-success {
+    background-color: rgba(212, 237, 218, 0.8);
+    border-color: rgba(195, 230, 203, 0.9);
+    color: #155724;
+}
+.alert-info { /* This is the one you will see for the "coming soon" message */
+    background-color: rgba(209, 236, 241, 0.8);
+    border-color: rgba(190, 229, 235, 0.9);
+    color: #0c5460;
+}
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        
+<!-- In sales_person_dashboard.html -->
+
+{% include 'sales_sidebar.html' %}
+        
+        <!-- Main Content -->
+        <main class="main-content">
+    <!-- ========================================================== -->
+    <!-- === START: ADD THIS BLOCK TO DISPLAY FLASH MESSAGES    === -->
+    <!-- ========================================================== -->
+    <div class="flash-alerts-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    </div>
+
+    <!-- Gmail Connection Status -->
+    <div class="content-card mb-4">
+        <h5 class="card-title"><i data-feather="mail"></i> Gmail Connection</h5>
+        {% if current_user.google_credentials_encrypted %}
+            <div class="alert alert-success mb-0">
+                <i class="bi bi-check-circle-fill"></i> Your Gmail account is successfully connected.
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <p class="mb-3"><i class="bi bi-exclamation-triangle-fill"></i> Your Gmail account is not connected. You must connect your account to send emails and start campaigns.</p>
+                <a href="{{ url_for('auth.authorize') }}" class="btn btn-primary">
+                    <i class="bi bi-google"></i> Connect Your Gmail Account
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- === END: FLASH MESSAGE BLOCK                         === -->
+    <!-- ========================================================== -->
+
+            <header class="main-header">
+                <div>
+                    <h1 class="header-greeting">Sales Dashboard</h1>
+                    <p class="header-date">Your personal performance overview, {{ current_user.name }}.</p>
+                </div>
+                <div class="header-controls">
+                    <div class="search-box">
+                        <i data-feather="search" class="search-icon"></i>
+                        <input type="text" placeholder="Search leads..." id="salesDashboardSearch">
+                    </div>
+                    <a href="{{ url_for('main.add_lead') }}" class="btn-header-action" title="Add a New Lead">
+                        <i data-feather="plus-circle"></i>
+                        <span>Add Lead</span>
+                    </a>
+                    <button class="btn-icon" id="darkModeToggle" title="Toggle Dark Mode">
+                        <i data-feather="moon"></i>
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn-icon" id="notificationBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                            <i data-feather="bell"></i>
+                            <span class="notification-badge" style="display: none;"></span> 
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu"></ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn-icon dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Export My Leads">
+                            <i data-feather="download"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('main.export_my_leads', export_type='pdf') }}"><i class="bi bi-filetype-pdf me-2"></i> PDF</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.export_my_leads', export_type='excel') }}"><i class="bi bi-file-earmark-excel me-2"></i> Excel</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.export_my_leads', export_type='csv') }}"><i class="bi bi-filetype-csv me-2"></i> CSV</a></li>
+                        </ul>
+                    </div>
+                    <!-- ============================================= -->
+                    <!-- === START: NEW PROFILE DROPDOWN BUTTON    === -->
+                    <!-- ============================================= -->
+                    <div class="dropdown">
+                        <button class="btn-icon dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="My Profile">
+                            <i data-feather="user"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">{{ current_user.name }}</h6></li>
+                            <li><span class="dropdown-item-text"><small class="text-muted">Role: {{ current_user.role|title }}</small></span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth.logout') }}"><i data-feather="log-out" class="me-2" style="width:16px; height:16px;"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                    <!-- ============================================= -->
+                    <!-- === END: NEW PROFILE DROPDOWN BUTTON      === -->
+                    <!-- ============================================= -->
+                </div>
+            </header>
+
+            <!-- KPI Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrapper bg-primary"><i class="bi bi-person-check-fill"></i></div>
+                        <div class="kpi-content">
+                            <div class="value">{{ my_leads_count }}</div>
+                            <div class="label">Leads Assigned</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrapper bg-secondary"><i class="bi bi-inbox-fill"></i></div>
+                        <div class="kpi-content">
+                            <div class="value">{{ my_replies_count }}</div>
+                            <div class="label">Replies Received</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-12">
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrapper bg-success"><i class="bi bi-fire"></i></div>
+                        <div class="kpi-content">
+                            <div class="value">{{ my_hot_leads|length }}</div>
+                            <div class="label">Hot Leads (Interested)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actionable Leads Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="content-card">
+                        <h5 class="card-title">Your Actionable Leads</h5>
+                        {% if my_hot_leads %}
+                        <div class="table-responsive">
+                            <table class="table align-middle table-floating">
+                                <thead>
+                                    <tr>
+                                        <th>Lead</th><th>Contact Info</th><th>Last Activity</th><th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lead in my_hot_leads %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ lead.name }}</div>
+                                            <small class="text-muted">{{ lead.company }}</small>
+                                        </td>
+                                        <td><a href="mailto:{{ lead.email }}" class="text-decoration-none">{{ lead.email }}</a></td>
+                                        <td>
+                                            {% if lead.timestamp %}{{ moment(lead.timestamp).format('MMM D, YYYY') }}{% else %}N/A{% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="mailto:{{ lead.email }}" class="btn btn-sm btn-primary"><i class="bi bi-send me-1"></i> Contact</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center p-5">
+                            <i class="bi bi-check2-circle fs-1 text-success"></i>
+                            <h4 class="mt-3">All Caught Up!</h4>
+                            <p class="text-muted">You have no "interested" leads right now. Keep it up!</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            feather.replace();
+
+            // Dark Mode Toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                const setDarkMode = (isDark) => {
+                    document.body.classList.toggle('dark-mode', isDark);
+                    if (darkModeToggle.querySelector('i')) {
+                        const icon = isDark ? 'sun' : 'moon';
+                        darkModeToggle.querySelector('i').setAttribute('data-feather', icon);
+                        feather.replace();
+                    }
+                };
+                darkModeToggle.addEventListener('click', () => {
+                    const isDarkMode = !document.body.classList.contains('dark-mode');
+                    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                    setDarkMode(isDarkMode);
+                });
+                if (localStorage.getItem('theme') === 'dark') {
+                    setDarkMode(true);
+                }
+            }
+
+            // Notification Fetcher
+            async function fetchNotifications() {
+                const menu = document.getElementById('notificationMenu');
+                const badge = document.querySelector('.notification-badge');
+                if (!menu || !badge) return;
+                try {
+                    const response = await fetch('/notifications'); // You might want a different endpoint for sales later
+                    const notifications = await response.json();
+                    menu.innerHTML = '';
+                    if (notifications.length === 0) {
+                        menu.innerHTML = '<li><a class="dropdown-item text-muted" href="#">No new notifications</a></li>';
+                        badge.style.display = 'none';
+                    } else {
+                        notifications.forEach(notif => {
+                            menu.innerHTML += `<li><a class="dropdown-item" href="#">${notif.message}</a></li>`;
+                        });
+                        badge.textContent = notifications.length;
+                        badge.style.display = 'flex';
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch notifications:", error);
+                    menu.innerHTML = '<li><a class="dropdown-item text-danger" href="#">Could not load alerts</a></li>';
+                }
+            }
+            fetchNotifications();
+        });
+    </script>
+</body>
+</html>

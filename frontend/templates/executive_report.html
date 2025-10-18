@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; font-size: 11pt; line-height: 1.5; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { height: 60px; margin-bottom: 5px; }
+        .section { 
+            margin-bottom: 25px; 
+            page-break-inside: avoid;
+            padding: 10px;
+            border: 1px solid #f0f0f0;
+            border-radius: 5px;
+        }
+        h1 { color: #2c3e50; font-size: 18pt; margin-bottom: 5px; }
+        h2 { 
+            border-bottom: 1px solid #3498db; 
+            padding-bottom: 5px;
+            color: #3498db; 
+            font-size: 14pt;
+            margin-top: 0;
+        }
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .kpi {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .kpi-value {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .kpi-label {
+            font-size: 10pt;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        .chart { 
+            margin: 15px auto; 
+            text-align: center;
+            max-width: 90%;
+        }
+        img { max-width: 100%; }
+        .product-list {
+            margin-top: 10px;
+        }
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .alert-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 9pt;
+            color: #95a5a6;
+            text-align: center;
+        }
+        .top-performer {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .employee-card {
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .employee-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .employee-score {
+            font-size: 14pt;
+            color: #3498db;
+            margin: 5px 0;
+        }
+
+        .employee-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10pt;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if company_logo %}
+        <img class="logo" src="data:image/png;base64,{{ company_logo }}"/>
+        {% endif %}
+        <h1>Bharati AI Executive Report</h1>
+        <p>Generated on {{ last_updated }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Performance Overview</h2>
+        <div class="kpi-container">
+            <div class="kpi">
+                <div class="kpi-value">{{ total }}</div>
+                <div class="kpi-label">Total Emails Processed</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-value">{{ sla_met_pct|round(1) }}%</div>
+                <div class="kpi-label">SLA Compliance</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <h2>Product Demand Analysis</h2>
+        {% if executive_charts.product_demand %}
+        <div class="chart">
+            <img src="data:image/png;base64,{{ executive_charts.product_demand }}"/>
+        </div>
+        {% endif %}
+        
+    <div class="product-list">
+        <h3>Top Products Mentioned</h3>
+        {% for product in product_insights|sort(attribute='count', reverse=True) %}
+        <div class="product-item">
+            <span>{{ product.name }}</span>
+            <strong>{{ product.count }} ({{ product.percentage }}%)</strong>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Remove the entire Critical Alerts section (last section) and replace with: -->
+
+    <div class="section">
+        <h2>Product Category Analysis</h2>
+        {% if executive_charts.category_heatmap %}
+        <div class="chart">
+            <img src="data:image/png;base64,{{ executive_charts.category_heatmap }}"/>
+    </div>
+    {% else %}
+    <p>Heatmap data not available</p>
+    {% endif %}
+    
+    <div class="product-list">
+        <h3>Category Distribution</h3>
+        {% for category, count in category_distribution.items()|sort(attribute='1', reverse=True) %}
+        <div class="product-item">
+            <span>{{ category|title }}</span>
+            <strong>{{ count }} ({{ (count/total*100)|round(1) }}%)</strong>
+    </div>
+    {% endfor %}
+</div>
+</div>
+<!-- Add these sections after Product Category Analysis -->
+
+<div class="section">
+    <h2>Team Response Times</h2>
+    {% if executive_charts.team_response %}
+    <div class="chart">
+        <img src="data:image/png;base64,{{ executive_charts.team_response }}"/>
+    </div>
+    {% else %}
+    <p>Response time data not available</p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Performance Leaderboard</h2>
+    {% if executive_charts.performance_leaderboard %}
+    <div class="chart">
+        <img src="data:image/png;base64,{{ executive_charts.performance_leaderboard }}"/>
+    </div>
+    
+    <div class="top-performer">
+        <h3>🏆 Top Performer</h3>
+        <div class="employee-card">
+            <div class="employee-name">{{ top_performers[0].name }}</div>
+            <div class="employee-score">Score: {{ top_performers[0].score|round(1) }}</div>
+            <div class="employee-metrics">
+                <span>SLA: {{ top_performers[0].sla_compliance }}%</span>
+                <span>Handled: {{ top_performers[0].emails_handled }} emails</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+</div>
+
+    <div class="footer">
+        <p>This report was automatically generated by Bharati AI Email Processing System</p>
+        <p>Confidential - For internal use only</p>
+    </div>
+</body>
+</html>

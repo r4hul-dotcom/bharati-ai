@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Bharati AI</title>
+    
+    <!-- === STYLES AND SCRIPTS (Copied from dashboard.html for consistency) === -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Copy the entire <style> block from your dashboard.html file and paste it here -->
+    <style>
+        :root {
+            --sidebar-bg: #ffffff;
+            --main-bg-color: #f4f7fc;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --text-primary: #1A202C;
+            --text-secondary: #718096;
+            --accent-color: #0D6EFD;
+            --sidebar-width: 240px;
+        }
+        .dark-mode {
+            --sidebar-bg: #191C24;
+            --main-bg-color: #0D0F14;
+            --card-bg: rgba(28, 31, 40, 0.6);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #F7FAFC;
+            --text-secondary: #A0AEC0;
+            background-image: url("{{ url_for('static', filename='img/dark-bg.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--main-bg-color);
+            color: var(--text-primary);
+            margin: 0; padding: 1rem;
+            overflow: hidden; position: relative;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1; background: url("{{ url_for('static', filename='img/light-bg.jpg') }}") no-repeat center center;
+            filter: blur(12px); background-size: cover; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .users-list-container .card-title {
+            color: var(--text-primary);
+            padding-left: 0.5rem; /* Align with table content */
+            margin-bottom: 1rem;
+            font-size: 1.25rem; /* Make it a bit bigger like a section title */
+        }
+        .users-list-container .table {
+            --bs-table-bg: transparent; /* Make table background transparent */
+            --bs-table-border-color: var(--card-border); /* Use your theme's border color */
+            --bs-table-hover-bg: rgba(0, 0, 0, 0.04); /* Subtle hover for light mode */
+        }
+
+/* 4. Style the table header text */
+.users-list-container .table thead th {
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom-width: 1px;
+}
+
+/* 5. Style the table body text */
+.users-list-container .table tbody td {
+    color: var(--text-primary);
+    vertical-align: middle; /* Ensures icon button and text are aligned */
+}
+
+/* 6. Ensure the last row has no bottom border */
+.users-list-container .table tbody tr:last-child {
+    border-bottom-color: transparent;
+}
+
+/* 7. Dark Mode specific adjustments for the table */
+.dark-mode .users-list-container .table {
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.08); /* Subtle hover for dark mode */
+}
+
+/* Optional: Nicer styling for the delete button */
+.btn-outline-danger {
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+        .dark-mode body::before { opacity: 0; }
+        .dashboard-container { display: flex; }
+        .sidebar {
+            width: var(--sidebar-width); height: calc(100vh - 2rem); background-color: var(--sidebar-bg);
+            border: 1px solid var(--card-border); border-radius: 16px; display: flex; flex-direction: column;
+            padding: 1.5rem; position: fixed; top: 1rem; left: 1rem;
+        }
+        .sidebar-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+        .sidebar-logo { height: 40px; }
+        .sidebar-title { font-size: 1.25rem; font-weight: 600; }
+        .nav-links { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .nav-links .nav-link {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; margin-bottom: 0.5rem;
+            border-radius: 8px; color: var(--text-secondary); font-weight: 500; text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .nav-links .nav-link:hover { color: var(--text-primary); background-color: rgba(0,0,0,0.04); }
+        .dark-mode .nav-links .nav-link:hover { background-color: rgba(255,255,255,0.08); }
+        .nav-links .nav-link.active { background-color: var(--text-primary); color: var(--sidebar-bg); font-weight: 600; }
+        .sidebar-footer { margin-top: auto; }
+        .sidebar-heading { padding: 0 1rem; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+        .main-content {
+            flex-grow: 1; margin-left: calc(var(--sidebar-width) + 2rem);
+            height: calc(100vh - 2rem); overflow-y: auto; padding: 2rem;
+        }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header-greeting { font-size: 1.75rem; font-weight: 600; margin: 0; }
+        .content-card {
+            background-color: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 1.5rem; backdrop-filter: blur(15px) saturate(120%);
+        }
+        .flash-alerts-container { position: absolute; top: 1rem; right: 2.5rem; z-index: 1050; width: auto; max-width: 400px; }
+        .alert { border-radius: 8px; border: 1px solid transparent; box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(10px); font-weight: 500; }
+        .alert-success { background-color: rgba(212, 237, 218, 0.8); border-color: rgba(195, 230, 203, 0.9); color: #155724; }
+        .alert-info { background-color: rgba(209, 236, 241, 0.8); border-color: rgba(190, 229, 235, 0.9); color: #0c5460; }
+        .alert-danger { background-color: rgba(248, 215, 218, 0.8); border-color: rgba(245, 198, 203, 0.9); color: #721c24; }
+        .alert-warning { background-color: rgba(255, 243, 205, 0.8); border-color: rgba(255, 238, 186, 0.9); color: #856404; }
+    </style>
+</head>
+
+
+
+<body>
+    <div class="dashboard-container">
+        <!-- Reusable sidebar for a consistent experience -->
+        {% include 'executive_sidebar.html' %}
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1 class="header-greeting">User Management</h1>
+            </header>
+            
+            <!-- Container for flash messages -->
+            <div class="flash-alerts-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Add New User Card -->
+            <div class="content-card mb-4">
+                <h5 class="card-title">Add New User</h5>
+                <form action="{{ url_for('main.add_user') }}" method="POST">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" name="password" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="role" class="form-label">Role</label>
+                            <select id="role" name="role" class="form-select" required>
+                                <option value="sales" selected>Sales</option>
+                                <option value="exec">Executive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-person-plus-fill me-2"></i>Add User
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Users List Card -->
+            <div class="content-card users-list-container">
+                <h5 class="card-title">Existing Users</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th class="text-center">Role</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill {% if user.role == 'exec' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                        {{ user.role|title }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <form action="{{ url_for('main.delete_user', user_id=user._id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this user?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                {% if current_user.id == user._id|string %}disabled title="You cannot delete your own account"{% endif %}>
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center p-4">No other users found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        feather.replace();
+
+        // Optional: Add dark mode toggle functionality if you have a button for it in your header
+        const darkModeToggle = document.getElementById('darkModeToggle'); // Assuming your header has this button
+        if (darkModeToggle) {
+            const setDarkMode = (isDark) => {
+                document.body.classList.toggle('dark-mode', isDark);
+            };
+            darkModeToggle.addEventListener('click', () => {
+                const isDarkMode = !document.body.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                setDarkMode(isDarkMode);
+            });
+            if (localStorage.getItem('theme') === 'dark') {
+                setDarkMode(true);
+            }
+        }
+    </script>
+</body>
+</html>

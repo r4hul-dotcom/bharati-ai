@@ -1,0 +1,111 @@
+<!-- START OF FILE: templates/export_leads_pdf.html (UPGRADED) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Leads Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            font-size: 10px; 
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0D6EFD;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            height: 40px;
+        }
+        .header-text {
+            text-align: right;
+        }
+        h1 {
+            font-size: 20px;
+            margin: 0;
+            color: #0D6EFD;
+        }
+        .report-meta {
+            font-size: 9px;
+            color: #555;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            border: 1px solid #e0e0e0; 
+            padding: 9px; 
+            text-align: left; 
+        }
+        thead th { 
+            background-color: #f4f7fc; 
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        tbody tr:nth-child(even) { 
+            background-color: #f9f9f9; 
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://i.ibb.co/C0c2Xyr/logo.png" alt="Logo"> <!-- Using an online hosted logo for wkhtmltopdf -->
+        <div class="header-text">
+            <h1>Assigned Leads Report</h1>
+            <div class="report-meta">
+                <strong>Report For:</strong> {{ user_name }}<br>
+                <strong>Generated On:</strong> {{ moment().format('DD-MMM-YYYY, hh:mm A') }}
+            </div>
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if leads %}
+                {% for lead in leads %}
+                <tr>
+                    <td>{{ lead.get('name', 'N/A') }}</td>
+                    <td>{{ lead.get('email', 'N/A') }}</td>
+                    <td>{{ lead.get('company', 'N/A') }}</td>
+                    <td>{{ lead.get('status', 'N/A')|title }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px;">No leads found.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Bharati AI - Confidential Report
+    </div>
+</body>
+</html>

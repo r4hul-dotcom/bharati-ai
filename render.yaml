@@ -1,0 +1,49 @@
+services:
+  # This Redis service is KEPT. It is a separate free service
+  # that your main application will connect to for Celery.
+  - type: redis
+    name: bharati-ai-redis
+    plan: free
+    region: singapore
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: "Allow all internal services"
+
+  # Main web application - NOW RUNS GUNICORN AND CELERY TOGETHER
+  - type: web
+    name: bharati-ai-server
+    env: docker
+    repo: https://github.com/executiveengineer-byte/Bharati-Email-Classifier
+    # IMPORTANT: We now use only the main Dockerfile for everything.
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      # These environment variables are still needed because both the Flask app
+      # and the Celery worker process (running inside this same container)
+      # will use them.
+      - key: MONGO_URI
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: bharati-ai-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: bharati-ai-redis
+          property: connectionString
+    # This is the new command that starts both Gunicorn and Celery
+    # using the honcho process manager and your Procfile.
+    command: honcho start -f Procfile
+
+# --- THE WORKER AND FLOWER SERVICES BELOW HAVE BEEN DELETED ---
+#
+# The 'celery-worker' service is no longer needed because its command is now
+# managed by honcho inside the 'bharati-ai-server' service.
+#
+# The 'bharati-ai-flower' service is removed because you cannot run a third
+# process for monitoring on the free tier with this workaround.

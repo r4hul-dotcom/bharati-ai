@@ -1,0 +1,30 @@
+<!-- START OF FILE: templates/403.html -->
+
+{% extends "base.html" %}
+
+{% block title %}403 - Access Denied{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <i class="bi bi-slash-circle-fill text-danger" style="font-size: 5rem;"></i>
+    <h1 class="display-4 mt-3">Access Denied</h1>
+    <p class="lead">
+        Sorry, you do not have the necessary permissions to access this page.
+    </p>
+    <hr class="my-4">
+    <p>
+        Please contact an administrator if you believe this is an error.
+    </p>
+
+    <!-- Provide a helpful link to go back to a safe page -->
+    {% if current_user.is_authenticated and current_user.role == 'sales' %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('main.sales_dashboard_personal') }}" role="button">
+            Go to My Dashboard
+        </a>
+    {% else %}
+         <a class="btn btn-primary btn-lg" href="{{ url_for('main.home') }}" role="button">
+            Return to Home
+        </a>
+    {% endif %}
+</div>
+{% endblock %}

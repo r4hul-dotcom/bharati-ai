@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Dashboard - Bharati Fire Engineers</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    
+<script src="https://unpkg.com/feather-icons"></script>
+<!-- In dashboard.html, inside the <head> tag -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+    :root {
+        --sidebar-bg: #ffffff;
+        --main-bg-color: #f4f7fc; /* A solid, neutral light gray */
+        --card-bg: rgba(255, 255, 255, 0.7); /* Semi-transparent for light mode glass */
+        --card-border: rgba(0, 0, 0, 0.08);
+        --text-primary: #1A202C;
+        --text-secondary: #718096;
+        --accent-color: #0D6EFD;
+        --sidebar-width: 240px;
+    }
+
+/* Replace the rule at line 31 with this, and delete the one at line 60 */
+.dark-mode {
+    --sidebar-bg: #191C24;
+    --main-bg-color: #0D0F14;
+    --card-bg: rgba(28, 31, 40, 0.6);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --text-primary: #F7FAFC;
+    --text-secondary: #A0AEC0;
+
+    /* Properties from the second rule are now merged here */
+    background-image: url("{{ url_for('static', filename='img/dark-bg.jpg') }}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--main-bg-color);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 1rem;
+        overflow: hidden;
+        position: relative; /* Crucial for pseudo-element positioning */
+        transition: background-color 0.3s ease;
+    }
+
+    /* === BACKGROUND IMAGE LAYER === */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: -1;
+        
+        /* Light mode background by default */
+        background: url("{{ url_for('static', filename='img/light-bg.jpg') }}") no-repeat center center;
+        filter: blur(12px) grayscale(00) brightness(1.0);
+        background-size: cover;
+        
+        /* This will be overridden in dark mode */
+        opacity: 1; 
+        transition: opacity 0.5s ease;
+    }
+    
+    .dark-mode body::before {
+        /* When dark mode is active, HIDE the light mode background */
+        opacity: 0;
+    }
+
+    .dashboard-container {
+        display: flex;
+    }
+
+    /* === Sidebar Styles === */
+    .sidebar {
+        width: var(--sidebar-width);
+        height: calc(100vh - 2rem);
+        background-color: var(--sidebar-bg); /* Solid color */
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        transition: all 0.3s ease;
+    }
+    .sidebar-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+    .sidebar-logo { height: 40px; }
+    .sidebar-title { font-size: 1.25rem; font-weight: 600; }
+    .nav-links { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+    .nav-links .nav-link {
+        display: flex; align-items: center; gap: 0.75rem;
+        padding: 0.8rem 1rem; margin-bottom: 0.5rem;
+        border-radius: 8px; color: var(--text-secondary);
+        font-weight: 500; text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .nav-links .nav-link:hover { color: var(--text-primary); background-color: rgba(0,0,0,0.04); }
+    .dark-mode .nav-links .nav-link:hover { background-color: rgba(255,255,255,0.08); }
+    .nav-links .nav-link.active {
+        background-color: var(--text-primary);
+        color: var(--sidebar-bg);
+        font-weight: 600;
+    }
+    .dark-mode .nav-links .nav-link.active { background-color: #f0f0f0; color: #111; }
+    .nav-links .nav-link.active:hover {
+        background-color: var(--text-primary);
+        color: var(--sidebar-bg);
+    }
+
+    .dark-mode .nav-links .nav-link.active:hover { background-color: #f0f0f0; color: #111; }
+    .sidebar-footer { margin-top: auto; }
+    .nav-header { padding: 0.75rem 1rem; margin-top: 1rem; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+
+/* =================================================================== */
+/* CHANGE IN: dashboard.html (ADD this CSS to your <style> block)      */
+/* =================================================================== */
+
+/* === Modern Flash Message Alerts === */
+.flash-alerts-container {
+    position: absolute;
+    top: 1rem;
+    right: 2.5rem; /* Aligns with main content padding */
+    z-index: 1050; /* Above most elements */
+    width: auto;
+    max-width: 400px;
+}
+.alert {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-weight: 500;
+}
+.alert-dismissible .btn-close {
+    padding: 1rem;
+}
+/* Custom Alert Colors to match your login page */
+.alert-success {
+    background-color: rgba(212, 237, 218, 0.8);
+    border-color: rgba(195, 230, 203, 0.9);
+    color: #155724;
+}
+.alert-info {
+    background-color: rgba(209, 236, 241, 0.8);
+    border-color: rgba(190, 229, 235, 0.9);
+    color: #0c5460;
+}
+.alert-danger {
+    background-color: rgba(248, 215, 218, 0.8);
+    border-color: rgba(245, 198, 203, 0.9);
+    color: #721c24;
+}
+.alert-warning {
+    background-color: rgba(255, 243, 205, 0.8);
+    border-color: rgba(255, 238, 186, 0.9);
+    color: #856404;
+}
+    
+/* === Main Content Styles === */
+/* AFTER */
+/* BEFORE */
+.main-content {
+    flex-grow: 1;
+    margin-left: calc(var(--sidebar-width) + 2rem);
+    height: calc(100vh - 2rem); /* This forces it to be full height */
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+}
+    /* Modern Scrollbar */
+    .main-content::-webkit-scrollbar { width: 8px; }
+    .main-content::-webkit-scrollbar-track { background: transparent; }
+    .main-content::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+    .dark-mode .main-content::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); }
+
+    /* Header inside Main Content */
+    .main-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; padding: 0 0.5rem;
+    }
+    .header-greeting { font-size: 1.75rem; font-weight: 600; margin: 0; }
+    .header-date { color: var(--text-secondary); font-size: 0.9rem; }
+    .header-controls { display: flex; align-items: center; gap: 0.75rem; }
+    /* In dashboard.html, find and replace the icon-button-group CSS rule */
+
+.header-controls .icon-button-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Revert to the original gap for horizontal spacing */
+}
+
+    /* === Card Styles (Both Light and Dark mode) === */
+    .content-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        backdrop-filter: blur(15px) saturate(120%);
+        -webkit-backdrop-filter: blur(15px) saturate(120%);
+    }
+    .content-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+    }
+    .dark-mode .content-card:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.2); }
+    .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--text-primary); }
+    
+    /* Stat Card Specifics */
+    .stat-main-number { font-size: 2.5rem; font-weight: 600; }
+    .stat-main-label { color: var(--text-secondary); font-size: 0.85rem; }
+    .stat-pills { display: flex; gap: 0.75rem; margin-top: 2rem; justify-content: space-between; }
+    .stat-pill {
+        background-color: var(--main-bg);
+        border: 1px solid var(--card-border);
+        padding: 0.5rem 1rem; border-radius: 8px; text-align: center; flex-grow: 1;
+    }
+    .dark-mode .stat-pill { background-color: rgba(0,0,0,0.2); }
+    
+    .pill-value { font-weight: 600; font-size: 1rem; }
+    .pill-label { font-size: 0.75rem; color: var(--text-secondary); display: block; }
+
+    /* Table Styles */
+    .table { border-collapse: separate; border-spacing: 0 0.5rem; }
+    .table thead th { color: var(--text-secondary); font-weight: 500; border: 0; padding: 0 1rem 0.5rem; }
+    .table tbody tr {
+        background-color: var(--main-bg);
+        transition: background-color 0.2s ease;
+    }
+    .dark-mode .table tbody tr { background-color: rgba(255,255,255,0.04); }
+    .table tbody td { border: 0; padding: 0.75rem 1rem; }
+    .table tbody td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+    .table tbody td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+    
+    /* Badge Styles */
+    .badge.bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+    .dark-mode .badge.bg-primary-soft { background-color: rgba(13, 110, 253, 0.2); color: #60a5fa; }
+    .badge.bg-success-soft { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
+    .dark-mode .badge.bg-success-soft { background-color: rgba(25, 135, 84, 0.2); color: #3dd583; }
+    .badge.bg-danger-soft { background-color: rgba(165, 82, 90, 0.1); color: #dc3545; }
+    .dark-mode .badge.bg-danger-soft { background-color: rgba(220, 53, 69, 0.2); color: #ff7b8a; }
+    .badge.bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
+    .dark-mode .badge.bg-warning-soft { background-color: rgba(255, 193, 7, 0.2); color: #ffd24d; }
+
+/* === Floating Table Style for a Modern Look === */
+.table-floating,
+.table-floating th,
+.table-floating td {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.table-floating thead th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding-bottom: 1rem;
+}
+
+.table-floating tbody tr {
+    transition: none;
+}
+
+.table-floating tbody td {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--card-border) !important;
+}
+
+.table-floating tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+
+/* =================================================================== */
+/* CHANGE IN: dashboard.html (ADD this CSS to your <style> block)      */
+/* =================================================================== */
+
+/* === Header Controls Styling (Search and Buttons) === */
+.search-box {
+    display: flex;
+    align-items: center;
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+.search-box:focus-within {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+.search-box .search-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+}
+.search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-primary);
+    width: 120px; /* Adjust as needed */
+}
+.search-box input::placeholder {
+    color: var(--text-secondary);
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border: 1px solid var(--card-border);
+    border-radius: 8px; /* Softly rounded square */
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    position: relative; /* Crucial for the notification badge */
+}
+.btn-icon:hover, .btn-icon.active {
+    background-color: rgba(0,0,0,0.05);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+.dark-mode .btn-icon:hover, .dark-mode .btn-icon.active {
+    background-color: rgba(255,255,255,0.08);
+}
+/* Remove the default dropdown arrow for the download button */
+.btn-icon.dropdown-toggle::after {
+    display: none;
+}
+
+.btn-header-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-header-action:hover {
+    background-color: #0b5ed7; /* A slightly darker blue for hover */
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.btn-header-action i {
+    width: 16px;
+    height: 16px;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 18px;
+    height: 18px;
+    background-color: #dc3545; /* Red for notifications */
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--main-bg-color); /* Makes it pop */
+}
+    
+.progress-thin {
+    height: 20px; /* Matches the image's bar height */
+    border-radius: 10px;
+}
+
+.progress-bar.bg-success {
+    background-color: #4CAF50; /* Green for 100% */
+}
+
+.progress-bar.bg-warning {
+    background-color: #F4A261; /* Yellow for 50% */
+}
+
+/* === Styling for Text Inside Progress Bar === */
+.progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible; /* Helps see the text even if the bar is very short */
+}
+
+.progress-bar-text {
+    color: white;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4); /* Makes text pop against any color */
+}
+
+    .leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    }
+
+.leaderboard-table th,
+.leaderboard-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.leaderboard-table th {
+    background-color: #f5f5f5;
+}
+
+.sla-progress {
+    height: 20px;
+    background-color: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.sla-progress .sla-value {
+    color: white;
+    font-weight: bold;
+    padding-left: 5px;
+}
+
+/* SLA Compliance Colors */
+.sla-progress[style*="100%"] {
+    background-color: #4CAF50; /* Green for 100% */
+}
+
+.sla-progress[style*="50%"] {
+    background-color: #F4A261; /* Yellow for 50% */
+}
+
+/* =================================================================== */
+/* CHANGE IN: dashboard.html (ADD this CSS to your <style> block)      */
+/* =================================================================== */
+
+/* === Recent Classifications List Styling === */
+.recent-classifications-list ul {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Space between items */
+}
+
+.classification-item {
+    background-color: var(--main-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.dark-mode .classification-item {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.classification-item:hover {
+    transform: scale(1.02);
+    background-color: rgba(0, 0, 0, 0.03);
+}
+.dark-mode .classification-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.item-main-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.item-text {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--card-border);
+}
+
+.detail-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.badge.bg-secondary-soft {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+.dark-mode .badge.bg-secondary-soft {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #adb5bd;
+}
+
+.key-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2x2 grid */
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.metric-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--main-bg);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+}
+.dark-mode .metric-block {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.metric-icon-wrapper {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.metric-icon-wrapper i {
+    font-size: 1.5rem;
+}
+
+.metric-content {
+    flex-grow: 1;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* === FIX: Product Insights List Styling === */
+.list-group.table-floating .list-group-item {
+    background-color: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid var(--card-border) !important;
+}
+
+.list-group.table-floating .list-group-item:last-child {
+    border-bottom: none !important;
+}
+.sidebar-heading {
+    padding: 0 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+/* Custom Category Badges */
+.category-badge { font-weight: 500; }
+.category-complaint { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+.category-quotation_request { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+.category-follow_up { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
+.category-general_enquiry { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+
+.dark-mode .category-complaint { background-color: rgba(220, 53, 69, 0.2); color: #f78b95; }
+.dark-mode .category-quotation_request { background-color: rgba(13, 110, 253, 0.2); color: #7ab5ff; }
+.dark-mode .category-follow_up { background-color: rgba(255, 193, 7, 0.2); color: #ffe08a; }
+.dark-mode .category-general_enquiry { background-color: rgba(108, 117, 125, 0.2); color: #ced4da; }
+
+/* Custom Confidence Progress Bar */
+.progress-bar-wrapper {
+    height: 6px;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 4px 0;
+}
+.dark-mode .progress-bar-wrapper {
+    background-color: rgba(255,255,255,0.1);
+}
+.progress-bar-fill {
+    height: 100%;
+    background-color: #0D6EFD;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+.detail-value.confidence-value {
+    margin-left: auto; /* Pushes the percentage to the right */
+}
+.item-details .detail-block:last-child {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+.item-details .detail-block:last-child .progress-bar-wrapper {
+    flex-grow: 1;
+}
+
+.key-metrics-table td {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    vertical-align: middle;
+}
+.badge.bg-secondary-soft {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+.dark-mode .badge.bg-secondary-soft {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #adb5bd;
+}
+
+
+    /* Dropdown Override */
+    .dropdown-menu {
+        background-color: var(--sidebar-bg);
+        border-color: var(--card-border);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .dropdown-item { color: var(--text-secondary); }
+    .dropdown-item:hover { background-color: var(--accent-color); color: #ffffff; }
+</style>
+</head>
+<body>
+    <div class="dashboard-container">
+    
+        {% include 'executive_sidebar.html' %}
+  
+    
+<!-- =========================== -->
+<!-- === MAIN CONTENT AREA === -->
+<!-- =========================== -->
+<main class="main-content">
+    <!-- START: ADD THIS BLOCK FOR FLASH MESSAGES -->
+    <div class="flash-alerts-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <header class="main-header">
+        <div>
+            <h1 class="header-greeting" id="headerGreeting">Good Morning!</h1>
+            <p class="header-date" id="headerDate">Loading date...</p>
+        </div>
+
+        <div class="header-controls">
+            <div class="search-box">
+                <i data-feather="search" class="search-icon"></i>
+                <input type="text" placeholder="Search..." id="dashboardSearch">
+            </div>
+
+            <a href="{{ url_for('main.export_executive_report_pdf') }}" class="btn-header-action" title="Download Executive Summary Report">
+                <i data-feather="briefcase"></i>
+                <span>Executive Report</span>
+            </a>
+
+            <div class="icon-button-group">
+                <button class="btn-icon" id="darkModeToggle" title="Toggle Dark Mode">
+                    <i data-feather="moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn-icon" id="notificationBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                        <i data-feather="bell"></i>
+                        <span class="notification-badge" style="display: none;"></span> 
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu"></ul>
+                </div>
+                <div class="dropdown">
+                    <button class="btn-icon dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Export Options">
+                        <i data-feather="download"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/export/pdf"><i class="bi bi-filetype-pdf me-2"></i> PDF</a></li>
+                        <li><a class="dropdown-item" href="/export/excel"><i class="bi bi-file-earmark-excel me-2"></i> Excel</a></li>
+                        <li><a class="dropdown-item" href="/export/csv"><i class="bi bi-filetype-csv me-2"></i> CSV</a></li>
+                    </ul>
+                </div>
+                <div class="dropdown">
+                    <button class="btn-icon dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="My Profile">
+                        <i data-feather="user"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">{{ current_user.name }}</h6></li>
+                        <li><span class="dropdown-item-text"><small class="text-muted">Role: {{ current_user.role|title }}</small></span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth.logout') }}"><i data-feather="log-out" class="me-2" style="width:16px; height:16px;"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- START: Main Tab Content Wrapper                                       -->
+    <!-- All tab panes (Dashboard, Statistics, Reports) will be inside here.   -->
+    <!-- ===================================================================== -->
+    <div class="tab-content" id="v-pills-tabContent">
+
+        <!-- === DASHBOARD TAB PANE === -->
+        <div class="tab-pane fade show active" id="v-pills-dashboard" role="tabpanel" aria-labelledby="v-pills-dashboard-tab">
+            
+            <!-- STATS CARDS ROW -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-6 searchable-card">
+                    <div class="content-card h-100">
+                        <h5 class="card-title">Overall Information</h5>
+                        <div class="d-flex align-items-center justify-content-around text-center mt-4">
+                            <div>
+                                <div class="stat-main-number">{{ total }}</div>
+                                <div class="stat-main-label">Total Emails Processed</div>
+                            </div>
+                             <div>
+                                <div class="stat-main-number text-success">{{ "%.0f"|format(ai_sla_met_pct) }}%</div>
+                                <div class="stat-main-label">AI Automation SLA</div>
+                            </div>
+                        </div>
+                        <div class="stat-pills">
+                            <div class="stat-pill">
+                                <span class="pill-value">{{ key_metrics.avg_ml_confidence|round(1) }}%</span>
+                                <span class="pill-label">Avg. AI Confidence</span>
+                            </div>
+                            <div class="stat-pill">
+                                <span class="pill-value">{{ human_sla_met_pct|round(1) }}%</span>
+                                <span class="pill-label">Human Intervention SLA</span>
+                            </div>
+                            <div class="stat-pill">
+                                 <span class="pill-value">{{ avg_rule_confidence|round(1) }}%</span>
+                                 <span class="pill-label">Avg. Rules Confidence</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-6 searchable-card">
+                    <div class="content-card h-100">
+                        <h5 class="card-title">Email Volume Trend</h5>
+                        <div style="height: 220px;">
+                            <canvas id="volumeTrendCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Form -->
+            <div class="row justify-content-center g-4">
+                <div class="col-12 searchable-card">
+                    <div class="content-card">
+                        <h5 class="card-title">Filter Dashboard Data</h5>
+                        <form action="/dashboard" method="get">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label" for="category">Category</label>
+                                    <select class="form-select" name="category" id="category">
+                                        <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All Categories</option>
+                                        {% for cat in all_categories %}
+                                        <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat|replace('_',' ')|title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="sla">SLA Status</label>
+                                    <select class="form-select" name="sla" id="sla">
+                                        <option value="all" {% if sla_filter == 'all' %}selected{% endif %}>All</option>
+                                        <option value="met" {% if sla_filter == 'met' %}selected{% endif %}>SLA Met</option>
+                                        <option value="breached" {% if sla_filter == 'breached' %}selected{% endif %}>SLA Breached</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="product">Product</label>
+                                    <select class="form-select" name="product" id="product">
+                                        <option value="all">All Products</option>
+                                        {% for prod_item in all_products %}
+                                            <option value="{{ prod_item.code }}" {% if prod_item.code == product_filter %}selected{% endif %}>
+                                                {{ prod_item.display }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="date_from">From Date</label>
+                                    <input class="form-control" name="date_from" id="date_from" type="date" value="{{ date_from }}"/>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="date_to">To Date</label>
+                                    <input class="form-control" name="date_to" id="date_to" type="date" value="{{ date_to }}"/>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-2 d-flex justify-content-between">
+                                <button class="btn btn-primary px-4" type="submit"><i class="bi bi-funnel"></i> Apply Filters</button>
+                                <a class="btn btn-outline-secondary" href="/dashboard">Reset Filters</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Charts and Tables Row -->
+            <div class="row g-4 mt-1">
+                <div class="col-xl-5 searchable-card">
+                     <div class="content-card h-100">
+                        <h5 class="card-title">Category Distribution</h5>
+                        <div style="height: 320px;">
+                           <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-7 searchable-card">
+                    <div class="content-card h-100">
+                        <h5 class="card-title">Key Metrics</h5>
+                        <div class="table-responsive">
+                            <table class="table align-middle key-metrics-table table-floating">
+                                <tbody>
+                                    <tr>
+                                        <td><i class="bi bi-graph-up text-primary me-2"></i> Most Frequent Category</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary-soft">{{ key_metrics.most_frequent|replace('_',' ')|title }} ({{ key_metrics.most_frequent_count }})</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-graph-down text-secondary me-2"></i> Least Frequent Category</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-secondary-soft">{{ key_metrics.least_frequent|replace('_',' ')|title }} ({{ key_metrics.least_frequent_count }})</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-shield-exclamation text-danger me-2"></i> Total Complaints</td>
+                                        <td class="text-end fw-bold">{{ key_metrics.total_complaints }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="bi bi-robot text-info me-2"></i> Automation Rate</td>
+                                        <td class="text-end fw-bold">{{ "%.1f"|format(key_metrics.automation_rate) }}%</td>
+                                    </tr>
+                                     <tr>
+                                        <td><i class="bi bi-stars text-warning me-2"></i> Avg. AI Confidence</td>
+                                        <td class="text-end fw-bold">{{ "%.1f"|format(key_metrics.avg_ml_confidence) }}%</td>
+                                     </tr>
+                                    <tr>
+                                        <td><i class="bi bi-calendar-week text-success me-2"></i> Busiest Day</td>
+                                        <td class="text-end fw-bold">{{ key_metrics.busiest_day }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Classifications Table Row -->
+            <div class="row g-4 mt-1">
+                <div class="col-12 searchable-card">
+                    <div class="content-card h-100">
+                        <h5 class="card-title">Recent Classifications</h5>
+                        <div class="table-responsive">
+                            <table class="table align-middle table-floating">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Products Detected</th>
+                                        <th class="text-end">Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for email in recent_emails[:5] %}
+                                    <tr>
+                                        <td>
+                                            {% set category_class = 'bg-primary-soft' %}
+                                            {% if 'complaint' in email.get('category', 'N/A') %}{% set category_class = 'bg-danger-soft' %}{% elif 'quotation' in email.get('category', 'N/A') %}{% set category_class = 'bg-success-soft' %}{% elif 'follow_up' in email.get('category', 'N/A') %}{% set category_class = 'bg-warning-soft' %}{% endif %}
+                                            <span class="badge {{ category_class }}">{{ email.get('category', 'N/A')|replace('_',' ')|title }}</span>
+                                        </td>
+                                        <td>
+                                            {% if email.products_detected %}{{ email.products_detected[0] | humanize_product_tag }}{% else %}<span class="text-secondary">None</span>{% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% set progress_color = '#DC3545' %}
+                                            {% if email.get('ml_confidence', 0) > 0.8 %}{% set progress_color = '#4CAF50' %}
+                                            {% elif email.get('ml_confidence', 0) > 0.5 %}{% set progress_color = '#FFC107' %}{% endif %}
+                                            {% set progress_style = "width: " ~ (email.get('ml_confidence', 0) * 100)|round ~ "%; background-color: " ~ progress_color ~ ";" %}
+                                            <div class="d-inline-flex align-items-center gap-2">
+                                                <div class="progress progress-thin" style="width: 80px; background-color: var(--card-border);">
+                                                    <div class="progress-bar" role="progressbar" style="{{ progress_style }}"></div>
+                                                </div>
+                                                <small class="text-secondary fw-bold" style="width: 45px;">{{ "%.1f"|format(email.get('ml_confidence', 0) * 100) }}%</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Closes the v-pills-dashboard tab-pane -->
+
+        <!-- === STATISTICS TAB PANE (FIXED) === -->
+        <div class="tab-pane fade" id="v-pills-statistics" role="tabpanel" aria-labelledby="v-pills-statistics-tab">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="row g-4">
+                        <div class="col-xl-6 searchable-card">
+                            <div class="content-card h-100">
+                                <h5 class="card-title">Top Requested Products</h5>
+                                <div style="height: 400px;">
+                                    <canvas id="topProductsCanvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 searchable-card">
+                            <div class="content-card h-100">
+                                <h5 class="card-title">Product-Category Heatmap</h5>
+                                 <div id="heatmapChartContainer" style="height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 mt-4 searchable-card">
+                    <div class="content-card">
+                        <h5 class="card-title"><i class="bi bi-lightbulb-fill me-2"></i> Product Insights</h5>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <h6 class="text-secondary mb-3"><i class="bi bi-graph-up-arrow text-success me-2"></i> Trending Up</h6>
+                                <ul class="list-group list-group-flush table-floating">
+                                    {% for product in trending_products.up %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>{{ product.name }}</span>
+                                        <span class="badge bg-success-soft">+{{ product.change }}%</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="list-group-item px-0 text-secondary">No significant upward trends.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="col-lg-6">
+                                <h6 class="text-secondary mb-3"><i class="bi bi-graph-down-arrow text-danger me-2"></i> Trending Down</h6>
+                                <ul class="list-group list-group-flush table-floating">
+                                     {% for product in trending_products.down %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>{{ product.name }}</span>
+                                        <span class="badge bg-danger-soft">{{ product.change }}%</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="list-group-item px-0 text-secondary">No significant downward trends.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Closes the v-pills-statistics tab-pane -->
+
+        <!-- === REPORTS TAB PANE (FIXED) === -->
+        <div class="tab-pane fade" id="v-pills-reports" role="tabpanel" aria-labelledby="v-pills-reports-tab">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="row g-4">
+                        <div class="col-xl-6 searchable-card">
+                            <div class="content-card h-100">
+                                <h5 class="card-title">Team Response Score</h5>
+                                <div class="text-center">
+                                    {% if team_performance_chart %}
+                                        <img src="data:image/png;base64,{{ team_performance_chart }}" alt="Team Performance" class="img-fluid" style="max-height:280px;" />
+                                    {% else %}
+                                        <p class="text-muted">Chart not available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 searchable-card">
+                            <div class="content-card h-100">
+                                <h5 class="card-title">SLA Compliance Trend</h5>
+                                <div class="text-center">
+                                    {% if sla_trend_chart %}
+                                        <img src="data:image/png;base64,{{ sla_trend_chart }}" class="img-fluid" alt="SLA Trend" />
+                                    {% else %}
+                                        <p class="text-muted">No SLA data</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 mt-4 searchable-card">
+                    <div class="content-card">
+                        <h5 class="card-title">Performance Leaderboard</h5>
+                        <div class="table-responsive">
+                            <table class="table align-middle table-floating">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Emails Handled</th>
+                                        <th>Avg Response Time</th>
+                                        <th>Human SLA Compliance</th>
+                                        <th>Satisfaction</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in team_performance %}
+                                    <tr>
+                                        <td>{{ entry.name }}</td>
+                                        <td>{{ entry.emails_handled }}</td>
+                                        <td>{{ entry.avg_response_time }}h</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress progress-thin flex-grow-1" style="background-color: var(--card-border);">
+                                                    <div class="progress-bar {% if entry.human_sla_compliance >= 90 %}bg-success{% elif entry.human_sla_compliance >= 70 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ entry.human_sla_compliance }}%"></div>
+                                                </div>
+                                                <small class="text-secondary fw-bold">{{ entry.human_sla_compliance|round(0) }}%</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if entry.satisfaction >= 4.5 %}bg-success-soft{% elif entry.satisfaction >= 3.5 %}bg-warning-soft{% else %}bg-danger-soft{% endif %}">
+                                                <i class="bi bi-star-fill"></i> {{ entry.satisfaction }}/5
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Closes the v-pills-reports tab-pane -->
+
+    </div> <!-- Closes the main tab-content wrapper -->
+</main>
+</body>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Your Custom JS -->
+    <script>
+        // Custom JS will go here in Step 3
+    </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // =============================================
+        // === 1. ELEMENT SELECTORS (DEFINED ONCE) ===
+        // =============================================
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+        const headerGreetingEl = document.getElementById('headerGreeting');
+        const headerDateEl = document.getElementById('headerDate');
+        const searchInput = document.getElementById('dashboardSearch');
+        const sidebarLinks = document.querySelectorAll('#v-pills-tab .nav-link');
+        const allSearchableCards = document.querySelectorAll('.searchable-card');
+
+        // Chart Instances
+        let volumeChart, categoryChart, topProductsChart, heatmapChart = null; 
+
+        // ===================================
+        // === 2. HEADER UPDATE FUNCTION ===
+        // ===================================
+        function updateHeader(title, showDate = false) {
+            if (!headerGreetingEl || !headerDateEl) return;
+            headerGreetingEl.textContent = title;
+            if (showDate) {
+                const today = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                headerDateEl.textContent = today.toLocaleDateString(undefined, options);
+                headerDateEl.style.display = 'block';
+            } else {
+                headerDateEl.style.display = 'none';
+            }
+        }
+
+        // ========================================
+        // === 3. DARK MODE TOGGLE FUNCTIONALITY ===
+        // ========================================
+        const setDarkMode = (isDark) => {
+            if (isDark) {
+                body.classList.add('dark-mode');
+                if(darkModeToggle) darkModeToggle.querySelector('i').classList.replace('bi-moon-fill', 'bi-sun-fill');
+            } else {
+                body.classList.remove('dark-mode');
+                if(darkModeToggle) darkModeToggle.querySelector('i').classList.replace('bi-sun-fill', 'bi-moon-fill');
+            }
+            feather.replace();
+            redrawCharts();
+        };
+
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', () => {
+                const isDarkMode = !body.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                setDarkMode(isDarkMode);
+            });
+        }
+        
+        // ==========================================
+        // === 4. SEARCH AND TAB SWITCH LOGIC     ===
+        // ==========================================
+
+        // --- Function to show all cards (used for reset) ---
+        function showAllCards() {
+            allSearchableCards.forEach(card => {
+                card.style.display = 'block';
+            });
+        }
+
+        // --- Live search functionality ---
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const activeTabPane = document.querySelector('.tab-pane.active');
+                if (!activeTabPane) return;
+
+                const searchableCardsInTab = activeTabPane.querySelectorAll('.searchable-card');
+                searchableCardsInTab.forEach(card => {
+                    const cardTitle = card.querySelector('.card-title')?.textContent.toLowerCase();
+                    if (cardTitle && cardTitle.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+
+        // =======================================
+        // === 5. CHART DRAWING FUNCTIONALITY ===
+        // =======================================
+        function redrawCharts() {
+            // Destroy previous instances to prevent memory leaks
+            if(volumeChart) volumeChart.destroy();
+            if(categoryChart) categoryChart.destroy();
+            if(topProductsChart) topProductsChart.destroy();
+            if(heatmapChart) heatmapChart.destroy(); // Add heatmap destroy
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const textColor = isDark ? 'rgba(255, 255, 255, 0.8)' : '#495057';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+
+            const volumeCtx = document.getElementById('volumeTrendCanvas')?.getContext('2d');
+            if (volumeCtx) {
+                const gradient = volumeCtx.createLinearGradient(0, 0, 0, 180);
+                gradient.addColorStop(0, isDark ? 'rgba(13, 110, 253, 0.5)' : 'rgba(13, 110, 253, 0.7)');
+                gradient.addColorStop(1, 'rgba(13, 110, 253, 0)');
+                volumeChart = new Chart(volumeCtx, {
+                    type: 'line',
+                    data: {
+                        labels: JSON.parse('{{ volume_labels | tojson | safe }}'),
+                        datasets: [{
+                            label: 'Email Volume',
+                            data: JSON.parse('{{ volume_data | tojson | safe }}'),
+                            backgroundColor: gradient,
+                            borderColor: '#0d6efd',
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#0d6efd',
+                            tension: 0.4,
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: textColor, font: { size: 10 } } },
+                            y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+
+            const categoryCtx = document.getElementById('categoryChart')?.getContext('2d');
+            if (categoryCtx) {
+                categoryChart = new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: JSON.parse('{{ category_labels | tojson | safe }}').map(l => l.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase())),
+                        datasets: [{
+                            label: 'Categories',
+                            data: JSON.parse('{{ category_data | tojson | safe }}'),
+                            backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997'],
+                            borderWidth: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '70%',
+                        plugins: { legend: { position: 'bottom', labels: { color: textColor } } }
+                    }
+                });
+            }
+
+            // --- Chart.js: Top Products Bar ---
+            const topProductsCtx = document.getElementById('topProductsCanvas')?.getContext('2d');
+            if(topProductsCtx) {
+                topProductsChart = new Chart(topProductsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: JSON.parse('{{ top_product_labels | tojson | safe }}'),
+                        datasets: [{
+                            label: 'Request Count',
+                            data: JSON.parse('{{ top_product_data | tojson | safe }}'),
+                            backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                            borderColor: '#0d6efd',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: (tooltipItems) => tooltipItems[0].label,
+                                    label: (tooltipItem) => ` Requests: ${tooltipItem.raw}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+            
+            // --- ApexCharts: Product-Category Heatmap ---
+            const heatmapContainer = document.querySelector("#heatmapChartContainer");
+            if (heatmapContainer) {
+                const heatmapOptions = {
+                    series: JSON.parse('{{ heatmap_data.series | tojson | safe }}'),
+                    chart: {
+                        height: 400,
+                        type: 'heatmap',
+                        toolbar: { show: false },
+                        background: 'transparent'
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        style: { colors: ['#333'] }
+                    },
+                    colors: ["#0D6EFD"],
+                    xaxis: {
+                        type: 'category',
+                        categories: JSON.parse('{{ heatmap_data.categories | tojson | safe }}'),
+                        labels: {
+                            rotate: -45,
+                            trim: true,
+                            style: {
+                                colors: textColor,
+                                fontSize: '10px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                         labels: {
+                            style: { colors: textColor }
+                        }
+                    },
+                    tooltip: {
+                        theme: isDark ? 'dark' : 'light'
+                    },
+                    grid: {
+                        borderColor: gridColor
+                    }
+                }; // Semicolon was correctly placed here.
+
+                heatmapChart = new ApexCharts(heatmapContainer, heatmapOptions);
+                heatmapChart.render();
+            }
+        } // This closing brace for redrawCharts() is crucial.
+
+        // =================================
+        // === 6. NOTIFICATION FETCHER ===
+        // =================================
+        async function fetchNotifications() {
+            const notificationMenu = document.getElementById('notificationMenu');
+            const notificationBadge = document.querySelector('.notification-badge');
+            if (!notificationMenu || !notificationBadge) return;
+
+            try {
+                const response = await fetch('/notifications');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const notifications = await response.json();
+        
+                notificationMenu.innerHTML = ''; 
+                if (notifications.length === 0) {
+                    notificationMenu.innerHTML = '<li><a class="dropdown-item text-muted" href="#">No new notifications</a></li>';
+                    notificationBadge.style.display = 'none';
+                } else {
+                    // THE FIX IS IN THIS LOOP
+                    notifications.forEach(notificationObj => {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.className = 'dropdown-item';
+                        a.href = '#';
+                        
+                        // BEFORE: a.textContent = notificationObj; // This caused [object Object]
+                        // AFTER: Access the .message property from the object
+                        a.textContent = notificationObj.message; 
+                        
+                        li.appendChild(a);
+                        notificationMenu.appendChild(li);
+                    });
+                    notificationBadge.textContent = notifications.length;
+                    notificationBadge.style.display = 'flex'; // Use flex to center the number
+                }
+            } catch (error) {
+                console.error("Failed to fetch notifications:", error);
+                notificationMenu.innerHTML = '<li><a class="dropdown-item text-danger" href="#">Could not load alerts</a></li>';
+                notificationBadge.style.display = 'none';
+            }
+        }
+
+        // ==================================
+        // === 7. INITIAL PAGE LOAD CALLS ===
+        // ==================================
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            setDarkMode(true);
+        } else {
+            redrawCharts(); 
+        }
+        
+        const initialHour = new Date().getHours();
+        const initialGreeting = initialHour < 12 ? "Good Morning!" : initialHour < 18 ? "Good Afternoon!" : "Good Evening!";
+        updateHeader(initialGreeting, true);
+        
+        fetchNotifications();
+            // ==========================================================
+            // === PASTE THIS ENTIRE NEW BLOCK INTO YOUR SCRIPT TAG   ===
+            // ==========================================================
+            
+            function activateTabFromHash() {
+                const hash = window.location.hash;
+                if (hash) {
+                    // Find the sidebar link whose href ENDS WITH the hash value
+                    const tabTriggerEl = document.querySelector(`#v-pills-tab a[href$="${hash}"]`);
+                    
+                    if (tabTriggerEl) {
+                        // Use Bootstrap's official method to programmatically show the tab
+                        const tab = new bootstrap.Tab(tabTriggerEl);
+                        tab.show();
+                    }
+                }
+            }
+
+            // Run this function immediately when the page loads
+            activateTabFromHash();
+
+            // This makes sure that if the user is already on the page and clicks a link
+            // with a hash, the tab will still switch.
+            window.addEventListener('hashchange', activateTabFromHash, false);
+
+            // ==========================================================
+            // === END OF THE NEW BLOCK                               ===
+            // ==========================================================
+
+
+        feather.replace();
+    });
+
+</script>
+</body>
+</html>
